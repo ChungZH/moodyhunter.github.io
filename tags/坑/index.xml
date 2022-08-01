@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>坑 on Moody&#39;s</title>
+    <link>https://mooody.me/tags/%E5%9D%91/</link>
+    <description>Recent content in 坑 on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Mon, 04 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://mooody.me/tags/%E5%9D%91/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>与 Wayland 的第 N&#43;1 次亲密互动（退坑重制版）</title>
+      <link>https://mooody.me/posts/2022-07/me-vs-wayland-revisited/</link>
+      <pubDate>Mon, 04 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-07/me-vs-wayland-revisited/</guid>
+      <description>我也是 Wayland 用户了！ 退了谢谢 就在三天之前，……
+我就退了谢谢。 在切换到 Wayland 前，我对他充满了满心憧憬，因为我有个 4K 屏幕而 X11 下（似乎）对多屏不同 DPI 的支持不是很好。
+自从 2021 年底左右，我就一次又一次地切换到 Wayland 进行体验，即使每次都有一些新的 bug 被修复，但当时的整体感觉仍然不好。
+直到前几天（四天前）我又一次尝试 Wayland，第一天下来，虽然体验到了一些 glitch，但整体还算可以接受。Wayland 带来的 4K 高分屏支持、高刷新率支持都是顶级的加分项。
+退坑 但从第二天开始，各种各样的问题就浮现出来：
+VSCode 无法使用输入法 我要写 blog 啊，没有中文输入法怎么行？
+🍊：怎么用不了输入法
+Ian：ozone
+🍊：所以怎么办
+Ian：在别的地方输入，然后 cut paste
+Chromium 上游的 text_input_manager_v3 支持 Code Review 仍然在进行中，尚未合并。因此下游电子垃圾们只能慢慢等着（或者 XWayland）。直接导致 Chromium / Chrome / VSCode 在 native Wayland 环境下根本无法使用输入法。
+注：Chromium / Chrome 可以通过使用 --gtk-version=4 启用 GTK4，通过构造一个假的（没错）GTK 窗口进行 &amp;ldquo;伪造&amp;rdquo; 输入法支持
+有关输入法的更多内容，请戳 Chrome/Chromium 今日 Wayland 输入法支持现状</description>
+    </item>
+    
+    <item>
+      <title>我与 Wayland 的第 N 次亲密互动</title>
+      <link>https://mooody.me/posts/2022-07/me-vs-wayland/</link>
+      <pubDate>Fri, 01 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-07/me-vs-wayland/</guid>
+      <description>我也是 Wayland 用户了！ 今天从 X11 迁移到了 Wayland，我也是 Wayland 用户了！</description>
+    </item>
+    
+    <item>
+      <title>Android &#39;Deploy&#39; Qt?</title>
+      <link>https://mooody.me/posts/2022-05/android-deploy-qt/</link>
+      <pubDate>Fri, 13 May 2022 02:09:05 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-05/android-deploy-qt/</guid>
+      <description>你这 androiddeployqt 可能没法正常 deploy Qt 一些无聊的概念 Moody&amp;rsquo;s Utility Bot 是一个与此仓库 GitHub Actions 梦幻联动 的 Telegram Bot
+负责发送消息和最新 build 产物， 同时也负责提醒蔡队起来（出处：&amp;ldquo;我起来了&amp;rdquo;） Qt 是 ……
+这还用介绍吗 QtGraphicalEffects 是 ……
+Qt5 时期的一个 Qt module，顾名思义负责 “图形特效” 比如渐变，阴影甚至 GLSL 效果 但在 Qt6 中被 deprecate 了 但我硬是强行将其 port 到 Qt6，其实是一种 “又不是不能用” 的状态 《开端》？ 2022 年 5 月 1 日凌晨 1 点 00 分 56 秒：
+Moody&amp;rsquo;s Utils Bot:
+Successfully built the client app, [File : MoodyAppMain.</description>
+    </item>
+    
+    <item>
+      <title>ArchRV - BuggyFFI</title>
+      <link>https://mooody.me/posts/2022-04/archrv-libffi/</link>
+      <pubDate>Tue, 19 Apr 2022 23:09:10 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/archrv-libffi/</guid>
+      <description>EXPAND MY INTEGER!
+libffi
+libffi 是什么？ A portable foreign-function interface library.
+说人话就是：……算了你自己去看吧
+libffi 怎么了？ TLDR：测试炸了 or, 单元测试文件 ./testsuite/libffi.call/strlen.c 第 32 行 1 2 3 30: s = &amp;#34;a&amp;#34;; 31: ffi_call(&amp;amp;cif, FFI_FN(my_strlen), &amp;amp;rint, values); 32: CHECK(rint == 1); 的 CHECK 失败了（ rint 不等于 1 了）
+libffi 测试为什么炸了？ 首先来看代码（经过简化）：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 // testsuite/libffi.call/strlen.c size_t ABI_ATTR my_strlen(char *s) { return (strlen(s)); } int main (void) { // 省略了部分无关代码 char *s = &amp;#34;a&amp;#34;; void *values[MAX_ARGS]; values[0] = (void*) &amp;amp;s; ffi_arg rint; ffi_call(&amp;amp;cif, FFI_FN(my_strlen), &amp;amp;rint, values); CHECK(rint == 1); } 观测 经过两分钟的代码观测，从以上代码块 L12 来看，rint 是一个 ffi_arg 类型的变量，经过阅读 header 可以得知，ffi_arg 是一个 64 位无符号整数类型：</description>
+    </item>
+    
+    <item>
+      <title>记一次 debug qmake</title>
+      <link>https://mooody.me/posts/2022-04/archrv-qmake6/</link>
+      <pubDate>Thu, 14 Apr 2022 00:32:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/archrv-qmake6/</guid>
+      <description>原本想甩锅 Qt，但后来发现小丑竟是 qemu :)
+正片开始 初来乍到 PLCT::archrv-pkg，作为新人总想快点贡献点什么，于是各种翻 build log。
+qalculate-qt:
+/usr/lib/qt6/mkspecs/features/toolchain.prf:76: Variable QMAKE_CXX.COMPILER_MACROS is not defined. Project ERROR: failed to parse default search paths from compiler output 打包机扔出了这么个错误，深受 qmake 其害的我看到这就准备开 bugreports.qt.io
+但是转头一想：肯定群里的大佬早就看到了这个问题，应该已经在 WIP 了吧，于是在群消息记录里搜了一下， 发现果然早在上个月 24 号（两周前左右）就在讨论这个问题了。
+可惜没能解决，翻记录说是 qemu 里独有的问题，换到物理机上就没事了。
+抱着试一试万一能给 Qt 水个 bugreport 的心态，我打开了这个文件：features/toolchain.prf 并找到第 76 行：
+73: cache($${target_prefix}.$$v, set stash, $$v) 74: $${target_prefix}.COMPILER_MACROS += $$v 75: } 76: cache($${target_prefix}.COMPILER_MACROS, set stash) &amp;lt;- 这里 77: } else { 78: # load from the cache 很明显是一个 qmake 变量 &amp;ldquo;某些东西.</description>
+    </item>
+    
+    <item>
+      <title>Qt 6.3 中 QML 的坑</title>
+      <link>https://mooody.me/posts/2022-04/qt63-qmlimportscanner/</link>
+      <pubDate>Sat, 02 Apr 2022 13:43:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/qt63-qmlimportscanner/</guid>
+      <description>估计是 Regression 了 qmlimportscanner 我也不知道为什么，由 androiddeployqt 调用的 qmlimportscanner 找不到就在本目录下的 QtGraphicalEffects QML Module。
+Android 平台黑屏卡死 其次，当使用 Qt 6.3 编译出的 Android APK 时，我的 MoodyAPI Client 一旦退出就无法再进入界面（Sigh
+解决方法 回退到 Qt6.2
+Press F to pay respects.</description>
+    </item>
+    
+  </channel>
+</rss>

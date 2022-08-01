@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Moody&#39;s</title>
+    <link>https://mooody.me/posts/</link>
+    <description>Recent content in Posts on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Mon, 04 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://mooody.me/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>与 Wayland 的第 N&#43;1 次亲密互动（退坑重制版）</title>
+      <link>https://mooody.me/posts/2022-07/me-vs-wayland-revisited/</link>
+      <pubDate>Mon, 04 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-07/me-vs-wayland-revisited/</guid>
+      <description>我也是 Wayland 用户了！ 退了谢谢 就在三天之前，……
+我就退了谢谢。 在切换到 Wayland 前，我对他充满了满心憧憬，因为我有个 4K 屏幕而 X11 下（似乎）对多屏不同 DPI 的支持不是很好。
+自从 2021 年底左右，我就一次又一次地切换到 Wayland 进行体验，即使每次都有一些新的 bug 被修复，但当时的整体感觉仍然不好。
+直到前几天（四天前）我又一次尝试 Wayland，第一天下来，虽然体验到了一些 glitch，但整体还算可以接受。Wayland 带来的 4K 高分屏支持、高刷新率支持都是顶级的加分项。
+退坑 但从第二天开始，各种各样的问题就浮现出来：
+VSCode 无法使用输入法 我要写 blog 啊，没有中文输入法怎么行？
+🍊：怎么用不了输入法
+Ian：ozone
+🍊：所以怎么办
+Ian：在别的地方输入，然后 cut paste
+Chromium 上游的 text_input_manager_v3 支持 Code Review 仍然在进行中，尚未合并。因此下游电子垃圾们只能慢慢等着（或者 XWayland）。直接导致 Chromium / Chrome / VSCode 在 native Wayland 环境下根本无法使用输入法。
+注：Chromium / Chrome 可以通过使用 --gtk-version=4 启用 GTK4，通过构造一个假的（没错）GTK 窗口进行 &amp;ldquo;伪造&amp;rdquo; 输入法支持
+有关输入法的更多内容，请戳 Chrome/Chromium 今日 Wayland 输入法支持现状</description>
+    </item>
+    
+    <item>
+      <title>我与 Wayland 的第 N 次亲密互动</title>
+      <link>https://mooody.me/posts/2022-07/me-vs-wayland/</link>
+      <pubDate>Fri, 01 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-07/me-vs-wayland/</guid>
+      <description>我也是 Wayland 用户了！ 今天从 X11 迁移到了 Wayland，我也是 Wayland 用户了！</description>
+    </item>
+    
+    <item>
+      <title>流水帐 之 &#39;JasPer 3&#39;</title>
+      <link>https://mooody.me/posts/2022-06/jasper3-crash-analysis/</link>
+      <pubDate>Sat, 18 Jun 2022 13:10:07 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-06/jasper3-crash-analysis/</guid>
+      <description>放假了! 由于 qmlls 崩溃了一整天，我终于放弃调查了，于是开始水群：
+#archlinux-cn:
+CuiHao: 最近 Spectacle 和 Plasmashell 在截图后疯狂 segfault，有人遇到吗
+CuiHao: #4 0x00007fd47872e774 in jas_stream_putc_func () from /usr/lib/libjasper.so.6 Spactacle 崩这儿了
+hosiet: libjapser? 为啥 arch 还在用这个
+CuiHao: https://bugs.kde.org/show_bug.cgi?id=455362 扔了个 bug，但感觉是 qt 的 bug
+csslayer: 不能修一下吗，是不是什么时候就和 jasper 不兼容了
+CuiHao: https://bugreports.qt.io/browse/QTBUG-104398 报了反正
+仔细查看 QTBUG-104398 后，我也在本地成功用 Qt 6.5 复现了这个 crash：
+首先写一个 cpp
+1 2 3 4 5 6 7 8 9 10 11 12 13 #include &amp;lt;QCoreApplication&amp;gt; #include &amp;lt;QImage&amp;gt; int main(int argc, char *argv[]) { QCoreApplication a(argc, argv); QImage image(64, 64, QImage::Format_Grayscale8); image.</description>
+    </item>
+    
+    <item>
+      <title>Android &#39;Deploy&#39; Qt?</title>
+      <link>https://mooody.me/posts/2022-05/android-deploy-qt/</link>
+      <pubDate>Fri, 13 May 2022 02:09:05 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-05/android-deploy-qt/</guid>
+      <description>你这 androiddeployqt 可能没法正常 deploy Qt 一些无聊的概念 Moody&amp;rsquo;s Utility Bot 是一个与此仓库 GitHub Actions 梦幻联动 的 Telegram Bot
+负责发送消息和最新 build 产物， 同时也负责提醒蔡队起来（出处：&amp;ldquo;我起来了&amp;rdquo;） Qt 是 ……
+这还用介绍吗 QtGraphicalEffects 是 ……
+Qt5 时期的一个 Qt module，顾名思义负责 “图形特效” 比如渐变，阴影甚至 GLSL 效果 但在 Qt6 中被 deprecate 了 但我硬是强行将其 port 到 Qt6，其实是一种 “又不是不能用” 的状态 《开端》？ 2022 年 5 月 1 日凌晨 1 点 00 分 56 秒：
+Moody&amp;rsquo;s Utils Bot:
+Successfully built the client app, [File : MoodyAppMain.</description>
+    </item>
+    
+    <item>
+      <title>QProcess in Qemu - A Detailed Explanation</title>
+      <link>https://mooody.me/posts/2022-04/qprocess-in-qemu/</link>
+      <pubDate>Thu, 28 Apr 2022 15:44:00 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/qprocess-in-qemu/</guid>
+      <description>It&amp;rsquo;s been a long time since my promise to publish a detailed write-up on what the hell was actually going on inside qemu.
+Qt, for its Unix QProcess implementation, utilises forkfd library, (See also: https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd) as a helper library to fork subprocess.
+pidfd is a new kernel feature, which has just been added to the kernel upon v5.2.
+Since this merge, Qt added a new configuration feature (forkfd_pidfd, &amp;ldquo;CLONE_PIDFD support in forkfd&amp;rdquo;) and it was default to ON on Linux.</description>
+    </item>
+    
+    <item>
+      <title>ArchRV - BuggyFFI</title>
+      <link>https://mooody.me/posts/2022-04/archrv-libffi/</link>
+      <pubDate>Tue, 19 Apr 2022 23:09:10 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/archrv-libffi/</guid>
+      <description>EXPAND MY INTEGER!
+libffi
+libffi 是什么？ A portable foreign-function interface library.
+说人话就是：……算了你自己去看吧
+libffi 怎么了？ TLDR：测试炸了 or, 单元测试文件 ./testsuite/libffi.call/strlen.c 第 32 行 1 2 3 30: s = &amp;#34;a&amp;#34;; 31: ffi_call(&amp;amp;cif, FFI_FN(my_strlen), &amp;amp;rint, values); 32: CHECK(rint == 1); 的 CHECK 失败了（ rint 不等于 1 了）
+libffi 测试为什么炸了？ 首先来看代码（经过简化）：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 // testsuite/libffi.call/strlen.c size_t ABI_ATTR my_strlen(char *s) { return (strlen(s)); } int main (void) { // 省略了部分无关代码 char *s = &amp;#34;a&amp;#34;; void *values[MAX_ARGS]; values[0] = (void*) &amp;amp;s; ffi_arg rint; ffi_call(&amp;amp;cif, FFI_FN(my_strlen), &amp;amp;rint, values); CHECK(rint == 1); } 观测 经过两分钟的代码观测，从以上代码块 L12 来看，rint 是一个 ffi_arg 类型的变量，经过阅读 header 可以得知，ffi_arg 是一个 64 位无符号整数类型：</description>
+    </item>
+    
+    <item>
+      <title>记一次 debug qmake</title>
+      <link>https://mooody.me/posts/2022-04/archrv-qmake6/</link>
+      <pubDate>Thu, 14 Apr 2022 00:32:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/archrv-qmake6/</guid>
+      <description>原本想甩锅 Qt，但后来发现小丑竟是 qemu :)
+正片开始 初来乍到 PLCT::archrv-pkg，作为新人总想快点贡献点什么，于是各种翻 build log。
+qalculate-qt:
+/usr/lib/qt6/mkspecs/features/toolchain.prf:76: Variable QMAKE_CXX.COMPILER_MACROS is not defined. Project ERROR: failed to parse default search paths from compiler output 打包机扔出了这么个错误，深受 qmake 其害的我看到这就准备开 bugreports.qt.io
+但是转头一想：肯定群里的大佬早就看到了这个问题，应该已经在 WIP 了吧，于是在群消息记录里搜了一下， 发现果然早在上个月 24 号（两周前左右）就在讨论这个问题了。
+可惜没能解决，翻记录说是 qemu 里独有的问题，换到物理机上就没事了。
+抱着试一试万一能给 Qt 水个 bugreport 的心态，我打开了这个文件：features/toolchain.prf 并找到第 76 行：
+73: cache($${target_prefix}.$$v, set stash, $$v) 74: $${target_prefix}.COMPILER_MACROS += $$v 75: } 76: cache($${target_prefix}.COMPILER_MACROS, set stash) &amp;lt;- 这里 77: } else { 78: # load from the cache 很明显是一个 qmake 变量 &amp;ldquo;某些东西.</description>
+    </item>
+    
+    <item>
+      <title>PLCT 初体验</title>
+      <link>https://mooody.me/posts/2022-04/plct-experience-1/</link>
+      <pubDate>Thu, 14 Apr 2022 00:07:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/plct-experience-1/</guid>
+      <description>&amp;ldquo;啊？ 系统镜像还没有啊？&amp;rdquo;
+本篇文章记录的是我在 PLCT 实习当工具人的初体验
+《开端》 就是羡慕。
+有一著名人士曾经说过：群我不 plct，有一瞬间我确实感觉到: &amp;ldquo;怎么他们都在？&amp;quot;，于是我开始 四处调查，我想起之前在 B 站看过 PLCT 编译器小组的 Report 感觉非常厉害，在内心里一瞬间燃 起了一株小小的火苗：&amp;ldquo;我也想像他们一样&amp;rdquo;。
+在经过了长达（一天）的调查以后，我终于全面了解了实习的不同种类，（身为 Arch 用户外加身边很多朋友都在 Arch RISC-V 打包小组），我也就选择了这里。我还了解到了 ArchRV 小组的申请要求 ： 一个 addpkg PR 和简历（据说不看？，但还是战战兢兢地完善了一下），一篇不长于 300 汉字的小短文。
+花了一晚上时间准备好资料，终于把邮件发了出去（几个 addpkg 的包也都合并了，都是很简单的修复 简直不敢说是 fix），关机睡觉
+第二天 KMail 坑我 :) 明明已经收到了回邮，但是并未提醒我新邮件，直接咕了
+第三天 一个自称 Wu Wei 的人联系到了我：
+我: 我想问一下，有面试环节什么的吗？
+对面：面试了，面试通过了
+我: ？？？？？
+接下来就是各种资料的填写，签字，提交一系列 paperwork，很标准地走个流程。
+我的第一个正经的 fix 下一篇再说</description>
+    </item>
+    
+    <item>
+      <title>Qt 6.3 中 QML 的坑</title>
+      <link>https://mooody.me/posts/2022-04/qt63-qmlimportscanner/</link>
+      <pubDate>Sat, 02 Apr 2022 13:43:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/qt63-qmlimportscanner/</guid>
+      <description>估计是 Regression 了 qmlimportscanner 我也不知道为什么，由 androiddeployqt 调用的 qmlimportscanner 找不到就在本目录下的 QtGraphicalEffects QML Module。
+Android 平台黑屏卡死 其次，当使用 Qt 6.3 编译出的 Android APK 时，我的 MoodyAPI Client 一旦退出就无法再进入界面（Sigh
+解决方法 回退到 Qt6.2
+Press F to pay respects.</description>
+    </item>
+    
+    <item>
+      <title>Qt 6.3 中的一些 CMake 函数</title>
+      <link>https://mooody.me/posts/2022-02/qt-6.3-cmakefunctions/</link>
+      <pubDate>Thu, 24 Feb 2022 22:56:28 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-02/qt-6.3-cmakefunctions/</guid>
+      <description>写在前面 今天心血来潮想写点东西，发现之前挖的各种大坑都没填好…… dbq）
+说点什么呢 翻消息记录突然看到下面这条评论：
+作者写的挺好的，如果能把下面这个官网上面对这个模块功能描述加进去完美了&amp;hellip;
+哇） 居然在认真的看我的 Blog，突然有点被感动到。 那么今天就先来聊 Qt 6.3 中的 CMake 函数
+1. qt6_add_qml_module 先来说说大名鼎鼎（？）的 qt6_add_qml_module：
+细数近期的 Qt Declarative 库中的 commits 不难发现，Qt 还在给这个本就已经很复杂的函数添加参数：FOLLOW_FOREIGN_VERSIONING，SKIP_TYPE_REGISTRATION，NO_IMPORT_SCAN，NO_RESOURCE_TARGET_PATH，NO_PLUGIN
+这都啥玩意？ a. FOLLOW_FOREIGN_VERSIONING 没用过，也没看懂 Doc 在说什么
+b. SKIP_TYPE_REGISTRATION 震惊！这个函数居然没有对应官方文档！
+根据相关 commit 记载： 如果指定了参数，那么生成出的 qmldir 文件中将不会出现任何 QML 文件中的类型。
+意思就是运行时 &amp;ldquo;我想手动注册自己的类型&amp;rdquo; （使用 qmlRegister[Anonymous|Singleton]Type&amp;lt;T&amp;gt;(...) 一类的函数）
+c. NO_IMPORT_SCAN 理论上只适用于静态编译的 Qt （因为 Shared Qt 是支持加载动态链接的插件的（QML 组件高强度依赖 Qt Plugin System），而静态无法进行运行时加载 DLLs）
+默认情况下，静态编译的 Qt 会在执行 CMake 时运行 qmlimportscanner 扫描指定目录下所有 qml 文件的 import 列表，从而列出需要进行链接的库 （比如 QtCharts, QtWebEngine, QtPositioning, QtGraphicalEffects），这些库将会以 target_link_libraries 的形式链接到依赖他们的 QML 模块中，从而进行 「另一种形式的运行时加载」（可能会再水一篇说这个？）</description>
+    </item>
+    
+    <item>
+      <title>Qt 6 Porting Guide - CMake</title>
+      <link>https://mooody.me/posts/2021-09/qt6-cmake-porting-guide/</link>
+      <pubDate>Mon, 20 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-09/qt6-cmake-porting-guide/</guid>
+      <description>随着 Qt6.2 进入 rc 阶段 (Update: 24 Feb 2022: 其实现在 6.3 都出 Beta 了)，标志着 Qt6 各模块已经趋近完整，可以看到身边越来越多的项目开始了从 Qt5 迁移到 Qt6 繁重工作， 作为从 Qt6 alpha 还没发就尝试迁移的资深人员。鄙人自认为在 Qt6 / CMake 方面算是比较了解。
+直入主题 不同于 6.0，Qt 6.2 包含了更多的 CMake API，本文就要说说个人认为最晦涩难懂的 qt_add_qml_module：
+qt_add_qml_module 非常复杂，单参数就有 26 个，首先来看一下这个巨大函数的 signature
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 qt_add_qml_module( # 必需参数 target URI uri VERSION version # 可选参数 [PAST_MAJOR_VERSIONS ...] [STATIC | SHARED] [PLUGIN_TARGET plugin_target] [OUTPUT_DIRECTORY output_dir] [RESOURCE_PREFIX resource_prefix] [CLASS_NAME class_name] [TYPEINFO typeinfo] [IMPORTS .</description>
+    </item>
+    
+    <item>
+      <title>五月</title>
+      <link>https://mooody.me/posts/2021-05/may-review/</link>
+      <pubDate>Tue, 01 Jun 2021 13:34:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/may-review/</guid>
+      <description>一个平平淡淡的五月就这么过去了 总想写点什么记录一下，但后来发现真的没啥能写
+六月考试月来了，希望 CS126 的题不要出的像 Coursework 那样恶心谢谢</description>
+    </item>
+    
+    <item>
+      <title>从源码编译 Qt6 for WASM - Part 2</title>
+      <link>https://mooody.me/posts/2021-05/qt-build-from-source-2/</link>
+      <pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/qt-build-from-source-2/</guid>
+      <description>时间过得好快，自从上次发 post 已经过了一周
+趁着深夜停电正好能总结一下这周掉进的坑（我保证没有咕咕咕） 1. &amp;ldquo;Qt Host Build&amp;rdquo;? 你看：
+-- Searching for tool &amp;#39;Qt6::moc&amp;#39; in package Qt6CoreTools. CMake Warning at cmake/QtToolHelpers.cmake:83 (find_package): Could not find a configuration file for package &amp;#34;Qt6CoreTools&amp;#34; that is compatible with requested version &amp;#34;6.2.0&amp;#34;. The following configuration files were considered but not accepted: /lib/cmake/Qt6CoreTools/Qt6CoreToolsConfig.cmake, version: 6.1.0 Call Stack (most recent call first): src/tools/moc/CMakeLists.txt:8 (qt_internal_add_tool) CMake Error at cmake/QtToolHelpers.cmake:109 (message): The tool &amp;#34;Qt6::moc&amp;#34; was not found in the Qt6CoreTools package.</description>
+    </item>
+    
+    <item>
+      <title>从源码编译 Qt6 for WASM - Part 1</title>
+      <link>https://mooody.me/posts/2021-05/qt-build-from-source/</link>
+      <pubDate>Mon, 24 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/qt-build-from-source/</guid>
+      <description>1. Qt6 时光荏苒，Qt6 发布 已经是去年的事情，截止到写文章的时候 Qt 6.1 都已经发布很久
+Qt5 和 6 之间一个重大的改变就是 Build System 从 qmake 转向了 CMake （太好了！），而后者有更多的 C/C++ 项目支持。 （这数量级之差不用我多说啥了吧）
+Qt 6.0 主要的目标是 &amp;ldquo;能用就行&amp;rdquo;，因此他们只在 release 里面包含了
+qtbase， qtdeclarative， qt5compat， qtshadertools， qtwayland 和 qtquick3d 这些相对基础的组件。 Qt 6.1 在此基础上又增加了
+qtcharts， qtdatavis3d， qtimageformats， qtnetworkauth， qtvirtualkeyboard 和 qtlottie 相比之下 6.1 包含的组件已经很多了
+2. WASM 我心心念念的 Qt for WASM 还是没来。
+后来看到 QTBUG-87471 才知道还得等到 Qt 6.2，这让我萌生了从源码编译的冲动
+3. “能编译了吗？” 因为要编译的是 dev 分支的 Qt6，我决定用 git 拉源码，还能随时 git pull 到最新的版本，于是开始 clone</description>
+    </item>
+    
+    <item>
+      <title>Hello, World!</title>
+      <link>https://mooody.me/posts/2021-05/hello-world/</link>
+      <pubDate>Sun, 23 May 2021 04:21:21 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/hello-world/</guid>
+      <description>这里是 Moody 的第一个 Post！
+有人问我你咋不用 WASM 自己写 blog system
+（其实也不是不行） 等填坑吧 </description>
+    </item>
+    
+  </channel>
+</rss>

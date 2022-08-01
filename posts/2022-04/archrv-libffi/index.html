@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+
+
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; block-all-mixed-content; default-src 'self'; child-src 'self'; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/; form-action 'self' https://utteranc.es; frame-src 'self' https://utteranc.es; img-src 'self' https:; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com/ https://cdn.jsdelivr.net/ https://utteranc.es; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/ https://utteranc.es/ https://static.cloudflareinsights.com/; prefetch-src 'self' https://utteranc.es; connect-src 'self' https://utteranc.es;">
+
+
+
+
+<meta name="author" content="Moody">
+<meta name="description" content="EXPAND MY INTEGER!
+libffi
+libffi 是什么？ A portable foreign-function interface library.
+说人话就是：……算了你自己去看吧
+libffi 怎么了？ TLDR：测试炸了 or, 单元测试文件 ./testsuite/libffi.call/strlen.c 第 32 行 1 2 3 30: s = &#34;a&#34;; 31: ffi_call(&amp;cif, FFI_FN(my_strlen), &amp;rint, values); 32: CHECK(rint == 1); 的 CHECK 失败了（ rint 不等于 1 了）
+libffi 测试为什么炸了？ 首先来看代码（经过简化）：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 // testsuite/libffi.call/strlen.c size_t ABI_ATTR my_strlen(char *s) { return (strlen(s)); } int main (void) { // 省略了部分无关代码 char *s = &#34;a&#34;; void *values[MAX_ARGS]; values[0] = (void*) &amp;s; ffi_arg rint; ffi_call(&amp;cif, FFI_FN(my_strlen), &amp;rint, values); CHECK(rint == 1); } 观测 经过两分钟的代码观测，从以上代码块 L12 来看，rint 是一个 ffi_arg 类型的变量，经过阅读 header 可以得知，ffi_arg 是一个 64 位无符号整数类型：">
+<meta name="keywords" content="blog,personal,中文,个人">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="ArchRV - BuggyFFI"/>
+<meta name="twitter:description" content="EXPAND MY INTEGER!
+libffi
+libffi 是什么？ A portable foreign-function interface library.
+说人话就是：……算了你自己去看吧
+libffi 怎么了？ TLDR：测试炸了 or, 单元测试文件 ./testsuite/libffi.call/strlen.c 第 32 行 1 2 3 30: s = &#34;a&#34;; 31: ffi_call(&amp;cif, FFI_FN(my_strlen), &amp;rint, values); 32: CHECK(rint == 1); 的 CHECK 失败了（ rint 不等于 1 了）
+libffi 测试为什么炸了？ 首先来看代码（经过简化）：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 // testsuite/libffi.call/strlen.c size_t ABI_ATTR my_strlen(char *s) { return (strlen(s)); } int main (void) { // 省略了部分无关代码 char *s = &#34;a&#34;; void *values[MAX_ARGS]; values[0] = (void*) &amp;s; ffi_arg rint; ffi_call(&amp;cif, FFI_FN(my_strlen), &amp;rint, values); CHECK(rint == 1); } 观测 经过两分钟的代码观测，从以上代码块 L12 来看，rint 是一个 ffi_arg 类型的变量，经过阅读 header 可以得知，ffi_arg 是一个 64 位无符号整数类型："/>
+
+<meta property="og:title" content="ArchRV - BuggyFFI" />
+<meta property="og:description" content="EXPAND MY INTEGER!
+libffi
+libffi 是什么？ A portable foreign-function interface library.
+说人话就是：……算了你自己去看吧
+libffi 怎么了？ TLDR：测试炸了 or, 单元测试文件 ./testsuite/libffi.call/strlen.c 第 32 行 1 2 3 30: s = &#34;a&#34;; 31: ffi_call(&amp;cif, FFI_FN(my_strlen), &amp;rint, values); 32: CHECK(rint == 1); 的 CHECK 失败了（ rint 不等于 1 了）
+libffi 测试为什么炸了？ 首先来看代码（经过简化）：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 // testsuite/libffi.call/strlen.c size_t ABI_ATTR my_strlen(char *s) { return (strlen(s)); } int main (void) { // 省略了部分无关代码 char *s = &#34;a&#34;; void *values[MAX_ARGS]; values[0] = (void*) &amp;s; ffi_arg rint; ffi_call(&amp;cif, FFI_FN(my_strlen), &amp;rint, values); CHECK(rint == 1); } 观测 经过两分钟的代码观测，从以上代码块 L12 来看，rint 是一个 ffi_arg 类型的变量，经过阅读 header 可以得知，ffi_arg 是一个 64 位无符号整数类型：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://mooody.me/posts/2022-04/archrv-libffi/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-04-19T23:09:10+01:00" />
+<meta property="article:modified_time" content="2022-04-19T23:09:10+01:00" />
+
+
+
+
+  <title>Moody&#39;s</title>
+
+  
+  <link rel="canonical" href="https://mooody.me/posts/2022-04/archrv-libffi/">
+  
+
+  <link rel="preload" href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as="font" type="font/woff2" crossorigin>
+
+
+  
+  
+  <link rel="stylesheet" href="/css/coder.min.6b1a4fbc48955b72aea7913e43fabeb45e8bc120da5aa41b598dd33adcac4b59.css" integrity="sha256-axpPvEiVW3Kup5E&#43;Q/q&#43;tF6LwSDaWqQbWY3TOtysS1k=" crossorigin="anonymous" media="screen" />
+
+
+
+
+
+  
+  
+    
+    
+    <link rel="stylesheet" href="/css/coder-dark.min.39e41a7f16bdf8cb16e43cae7d714fa1016f1d2d2898a5b3f27f42c9979204e2.css" integrity="sha256-OeQafxa9&#43;MsW5DyufXFPoQFvHS0omKWz8n9CyZeSBOI=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+   
+
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/cards.min.66689eb6794f4d37bf49748d47a91d8dc5918d78d800a8fae4f1a9649ce35145.css" integrity="sha256-ZmietnlPTTe/SXSNR6kdjcWRjXjYAKj65PGpZJzjUUU=" crossorigin="anonymous" media="screen" />
+  
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/spoiler.min.6758d9b6919e25bb0a3c105fb53c53d4329838c7c3c6c41a4443a232bcca0886.css" integrity="sha256-Z1jZtpGeJbsKPBBftTxT1DKYOMfDxsQaREOiMrzKCIY=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+  <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" href="/images/favicon.ico" sizes="16x16">
+
+<link rel="apple-touch-icon" href="/images/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#5bbad5">
+
+
+  
+
+  <meta name="generator" content="Hugo 0.101.0" />
+
+
+  
+
+</head>
+
+
+
+
+
+
+
+<body class="preload-transitions colorscheme-auto">
+  
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+  <main class="wrapper">
+    <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      Moody&#39;s
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/">主页</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">文章</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/friends/">友链</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">我</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://g.mooody.me/d/home/server-status?orgId=2">服务状态</a>
+            </li>
+          
+        
+        
+          
+          
+          
+            
+          
+            
+              
+                <li class="navigation-item menu-separator">
+                  <span>|</span>
+                </li>
+                
+              
+              <li class="navigation-item">
+                <a href="https://mooody.me/en/">🇬🇧</a>
+              </li>
+            
+          
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+    <div class="content">
+      
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://mooody.me/posts/2022-04/archrv-libffi/">
+              ArchRV - BuggyFFI
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime="2022-04-19T23:09:10&#43;01:00">
+                April 19, 2022
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <span class="tag">
+      <a href="/tags/archrv/">ArchRV</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/linux/">Linux</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/%E5%9D%91/">坑</a>
+    </span></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <blockquote>
+<p>EXPAND MY INTEGER!</p>
+</blockquote>
+<p><a href="https://github.com/libffi/libffi"><code>libffi</code></a></p>
+<h2 id="libffi-是什么">
+  libffi 是什么？
+  <a class="heading-link" href="#libffi-%e6%98%af%e4%bb%80%e4%b9%88">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<blockquote>
+<p>A portable foreign-function interface library.</p>
+</blockquote>
+<p>说人话就是：<a href="https://github.com/libffi/libffi#what-is-libffi">……算了你自己去看吧</a></p>
+<h2 id="libffi-怎么了">
+  libffi 怎么了？
+  <a class="heading-link" href="#libffi-%e6%80%8e%e4%b9%88%e4%ba%86">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<ul>
+<li>TLDR：测试炸了</li>
+<li>or, 单元测试文件 <code>./testsuite/libffi.call/strlen.c</code> 第 32 行</li>
+</ul>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#bd93f9">30</span><span style="color:#ff79c6">:</span>  s <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;a&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">31</span><span style="color:#ff79c6">:</span>  ffi_call(<span style="color:#ff79c6">&amp;</span>cif, FFI_FN(my_strlen), <span style="color:#ff79c6">&amp;</span>rint, values);
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">32</span><span style="color:#ff79c6">:</span>  CHECK(rint <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">1</span>);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>的 <code>CHECK</code> 失败了（ <code>rint</code> 不等于 <code>1</code> 了）</p>
+<h2 id="libffi-测试为什么炸了">
+  libffi 测试为什么炸了？
+  <a class="heading-link" href="#libffi-%e6%b5%8b%e8%af%95%e4%b8%ba%e4%bb%80%e4%b9%88%e7%82%b8%e4%ba%86">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>首先来看代码（经过简化）：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#6272a4">// testsuite/libffi.call/strlen.c
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>size_t ABI_ATTR <span style="color:#50fa7b">my_strlen</span>(<span style="color:#8be9fd">char</span> <span style="color:#ff79c6">*</span>s) { <span style="color:#ff79c6">return</span> (strlen(s)); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">main</span> (<span style="color:#8be9fd">void</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#6272a4">// 省略了部分无关代码
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>  <span style="color:#8be9fd">char</span> <span style="color:#ff79c6">*</span>s <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;a&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span>values[MAX_ARGS];
+</span></span><span style="display:flex;"><span>  values[<span style="color:#bd93f9">0</span>] <span style="color:#ff79c6">=</span> (<span style="color:#8be9fd">void</span><span style="color:#ff79c6">*</span>) <span style="color:#ff79c6">&amp;</span>s;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  ffi_arg rint;
+</span></span><span style="display:flex;"><span>  ffi_call(<span style="color:#ff79c6">&amp;</span>cif, FFI_FN(my_strlen), <span style="color:#ff79c6">&amp;</span>rint, values);
+</span></span><span style="display:flex;"><span>  CHECK(rint <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">1</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="观测">
+  观测
+  <a class="heading-link" href="#%e8%a7%82%e6%b5%8b">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>经过两分钟的代码观测，从以上代码块 L12 来看，<code>rint</code> 是一个 <code>ffi_arg</code> 类型的变量，经过阅读 header 可以得知，<code>ffi_arg</code> 是一个 64 位无符号整数类型：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#6272a4">// src/riscv/ffitarget.h
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">typedef</span> <span style="color:#8be9fd">unsigned</span> <span style="color:#8be9fd">long</span> ffi_arg;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span>   <span style="color:#8be9fd">signed</span> <span style="color:#8be9fd">long</span> ffi_sarg;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>首先使用 <code>gdb</code> 在对应的 main 函数打断点并尝试复现问题：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Breakpoint 1, main <span style="color:#ff79c6">()</span> at ./strlen.c:16
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> n // 狂躁的几次 n
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> p rint
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># 从 c 源码可以看出，这个 rint 在调用前是一个没经过 0 初始化的变量</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># 因此内存里面有脏东西很正常</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$1</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">72057593903531392</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> p s
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$2</span> <span style="color:#ff79c6">=</span> 0xaaaaaaaaaaab78 <span style="color:#f1fa8c">&#34;a&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> n
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">31</span>        ffi_call<span style="color:#ff79c6">(</span>&amp;cif, FFI_FN<span style="color:#ff79c6">(</span>my_strlen<span style="color:#ff79c6">)</span>, &amp;rint, values<span style="color:#ff79c6">)</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> n
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> p rint
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># 但如此看来，调用后的 rint 则不应该出现这么大的 length，毕竟我们的 s 只有一个字符 &#34;a&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$3</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">72057589742960641</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>看来问题核心出在了 <code>ffi_call</code> 函数里。</p>
+<p>重启调试，使用 s 指令进入 <code>ffi_call</code> 函数继续跟进。发现这东西转头调用了 <code>ffi_call_int</code>，而
+<code>ffi_call_int</code> 是个不短的函数，<del>于是决定，还是先看代码再跑 gdb</del></p>
+<p><a href="https://github.com/libffi/libffi/blob/464b4b66e3cf3b5489e730c1466ee1bf825560e0/src/riscv/ffi.c#L331">https://github.com/libffi/libffi/blob/464b4b66e3cf3b5489e730c1466ee1bf825560e0/src/riscv/ffi.c#L331</a></p>
+<p>仔细看下来，与 <code>rvalue</code> 相关的几段代码只有以下内容：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">27
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">28
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">29
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">30
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">31
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">32
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">33
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">34
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">35
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">36
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">37
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">38
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">int</span> <span style="color:#50fa7b">passed_by_ref</span>(call_builder <span style="color:#ff79c6">*</span>cb, ffi_type <span style="color:#ff79c6">*</span>type, <span style="color:#8be9fd">int</span> var) {
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#if ABI_FLEN
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>   <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>var <span style="color:#ff79c6">&amp;&amp;</span> type<span style="color:#ff79c6">-&gt;</span>type <span style="color:#ff79c6">==</span> FFI_TYPE_STRUCT) {
+</span></span><span style="display:flex;"><span>       float_struct_info fsi <span style="color:#ff79c6">=</span> struct_passed_as_elements(cb, type);
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">if</span> (fsi.as_elements) <span style="color:#ff79c6">return</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>
+</span></span><span style="display:flex;"><span>   <span style="color:#ff79c6">return</span> type<span style="color:#ff79c6">-&gt;</span>size <span style="color:#ff79c6">&gt;</span> <span style="color:#bd93f9">2</span> <span style="color:#ff79c6">*</span> __SIZEOF_POINTER__;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">ffi_call_int</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#6272a4">// 省略了无关参数
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>  <span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span>rvalue,       <span style="color:#6272a4">// 返回值（需要关注）
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// 省略了部分无关代码
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    size_t rval_bytes <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (rvalue <span style="color:#ff79c6">==</span> <span style="color:#8be9fd;font-style:italic">NULL</span> <span style="color:#ff79c6">&amp;&amp;</span> cif<span style="color:#ff79c6">-&gt;</span>rtype<span style="color:#ff79c6">-&gt;</span>size <span style="color:#ff79c6">&gt;</span> <span style="color:#bd93f9">2</span><span style="color:#ff79c6">*</span>__SIZEOF_POINTER__)
+</span></span><span style="display:flex;"><span>        rval_bytes <span style="color:#ff79c6">=</span> FFI_ALIGN(cif<span style="color:#ff79c6">-&gt;</span>rtype<span style="color:#ff79c6">-&gt;</span>size, STKALIGN);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// ......
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (rval_bytes)
+</span></span><span style="display:flex;"><span>        rvalue <span style="color:#ff79c6">=</span> (<span style="color:#8be9fd">void</span><span style="color:#ff79c6">*</span>)(alloc_base <span style="color:#ff79c6">+</span> arg_bytes);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// ......
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">int</span> return_by_ref <span style="color:#ff79c6">=</span> passed_by_ref(<span style="color:#ff79c6">&amp;</span>cb, cif<span style="color:#ff79c6">-&gt;</span>rtype, <span style="color:#bd93f9">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (return_by_ref)
+</span></span><span style="display:flex;"><span>        marshal(<span style="color:#ff79c6">&amp;</span>cb, <span style="color:#ff79c6">&amp;</span>ffi_type_pointer, <span style="color:#bd93f9">0</span>, <span style="color:#ff79c6">&amp;</span>rvalue);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// 省略准备参数的一个 for 循环...
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span>    ffi_call_asm ((<span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span>) alloc_base, cb.aregs, fn, closure);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (<span style="color:#ff79c6">!</span>return_by_ref <span style="color:#ff79c6">&amp;&amp;</span> rvalue)
+</span></span><span style="display:flex;"><span>        unmarshal(<span style="color:#ff79c6">&amp;</span>cb, cif<span style="color:#ff79c6">-&gt;</span>rtype, <span style="color:#bd93f9">0</span>, rvalue);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>即使是省略了其他内容，这段代码，一眼看下去还是感觉很难入手……</p>
+<p>但有两点值得注意：</p>
+<ol>
+<li>在上文 L17 定义的 <code>rval_bytes</code> 在本次测试中会恒等于 <code>0</code>，因为
+<ul>
+<li><code>rvalue</code> 传入值不会是 <code>NULL</code>（我们知道调用方给了地址的）</li>
+</ul>
+</li>
+<li><code>passed_by_ref</code> 恒返回 0，因为
+<ul>
+<li>那个 ABI_FLEN 宏究竟是多少不重要（因为我们的 <code>type-&gt;type</code> 不是 <code>FFI_TYPE_STRUCT</code>）</li>
+<li>同时 <code>type-&gt;size &gt; 2 * __SIZEOF_POINTER__</code> 不成立（因为我们的 <code>type</code> 是 <code>ffi_arg</code>）</li>
+</ul>
+</li>
+</ol>
+<p>基于以上两点，<code>ffi_call_int</code> 函数还就被简化为了以下两行：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#6272a4">// 实际进行调用：
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>ffi_call_asm ((<span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span>) alloc_base, cb.aregs, fn, closure);
+</span></span><span style="display:flex;"><span>unmarshal(<span style="color:#ff79c6">&amp;</span>cb, cif<span style="color:#ff79c6">-&gt;</span>rtype, <span style="color:#bd93f9">0</span>, rvalue);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>上面那个 <code>ffi_call_asm</code> 定义在一个 assembly 文件里，由于并不是所有的单元测试都炸，我暂且先 assume 其能工作，因此来看 <code>unmarshal</code> 函数：</p>
+<p><a href="https://github.com/libffi/libffi/blob/464b4b66e3cf3b5489e730c1466ee1bf825560e0/src/riscv/ffi.c#L254">https://github.com/libffi/libffi/blob/464b4b66e3cf3b5489e730c1466ee1bf825560e0/src/riscv/ffi.c#L254</a></p>
+<p>以下内容仍有省略，源文件在</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#6272a4">// 这段内容不在 c 文件里，为了方便阅读贴过来了
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">#if __SIZEOF_POINTER__ == 8
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>    <span style="color:#ff79c6">#define IS_INT(type) ((type) &gt;= FFI_TYPE_UINT8 &amp;&amp; (type) &lt;= FFI_TYPE_SINT64)
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6">#else
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>    <span style="color:#ff79c6">#define IS_INT(type) ((type) &gt;= FFI_TYPE_UINT8 &amp;&amp; (type) &lt;= FFI_TYPE_SINT32)
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span><span style="color:#50fa7b">unmarshal</span>(call_builder <span style="color:#ff79c6">*</span>cb, ffi_type <span style="color:#ff79c6">*</span>type, <span style="color:#8be9fd">int</span> var, <span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span>data) {
+</span></span><span style="display:flex;"><span>    size_t realign[<span style="color:#bd93f9">2</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span>pointer;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// ...省略了对于 FFI_TYPE_STRUCT 和浮点小数点的处理
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (type<span style="color:#ff79c6">-&gt;</span>size <span style="color:#ff79c6">&gt;</span> <span style="color:#bd93f9">2</span> <span style="color:#ff79c6">*</span> __SIZEOF_POINTER__) {
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">// 省略了对于大数据类型的处理（我们的 `type` 是 `ffi_arg`，不够大）
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    } <span style="color:#ff79c6">else</span> <span style="color:#ff79c6">if</span> (IS_INT(type<span style="color:#ff79c6">-&gt;</span>type) <span style="color:#ff79c6">||</span> type<span style="color:#ff79c6">-&gt;</span>type <span style="color:#ff79c6">==</span> FFI_TYPE_POINTER) {
+</span></span><span style="display:flex;"><span>        unmarshal_atom(cb, type<span style="color:#ff79c6">-&gt;</span>type, data);
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">return</span> data;
+</span></span><span style="display:flex;"><span>    } <span style="color:#ff79c6">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">// 整个 else 不会执行，因为上面的 if 已经满足了：IS_INT(type-&gt;type)
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这个 <code>unmarshal</code> 函数似乎没有什么值得关注的，因此继续进入 <code>unmarshal_atom</code>：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">17
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">18
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">19
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">20
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">21
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">22
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">23
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">24
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">25
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">26
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-C++" data-lang="C++"><span style="display:flex;"><span><span style="color:#ff79c6">static</span> <span style="color:#8be9fd">void</span> <span style="color:#50fa7b">unmarshal_atom</span>(call_builder <span style="color:#ff79c6">*</span>cb, <span style="color:#8be9fd">int</span> type, <span style="color:#8be9fd">void</span> <span style="color:#ff79c6">*</span>data) {
+</span></span><span style="display:flex;"><span>    size_t value;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// 省略浮点小数点的处理
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> (cb<span style="color:#ff79c6">-&gt;</span>used_integer <span style="color:#ff79c6">==</span> NARGREG) {
+</span></span><span style="display:flex;"><span>        value <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">*</span>cb<span style="color:#ff79c6">-&gt;</span>used_stack<span style="color:#ff79c6">++</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#ff79c6">else</span> {
+</span></span><span style="display:flex;"><span>        value <span style="color:#ff79c6">=</span> cb<span style="color:#ff79c6">-&gt;</span>aregs<span style="color:#ff79c6">-&gt;</span>a[cb<span style="color:#ff79c6">-&gt;</span>used_integer<span style="color:#ff79c6">++</span>];
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">switch</span> (type) {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_UINT8</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint8_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_SINT8</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint8_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_UINT16</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint16_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_SINT16</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint16_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_UINT32</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint32_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_SINT32</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint32_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#if __SIZEOF_POINTER__ == 8
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_UINT64</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint64_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_SINT64</span>: <span style="color:#ff79c6">*</span>(<span style="color:#8be9fd">uint64_t</span> <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#endif
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>        <span style="color:#ff79c6">case</span> <span style="color:#8be9fd;font-style:italic">FFI_TYPE_POINTER</span>: <span style="color:#ff79c6">*</span>(size_t <span style="color:#ff79c6">*</span>)data <span style="color:#ff79c6">=</span> value; <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">default</span><span style="color:#ff79c6">:</span> FFI_ASSERT(<span style="color:#bd93f9">0</span>); <span style="color:#ff79c6">break</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意 <code>data</code> 是指向 <code>ffi_arg</code> 类型的指针，也就是一个 64 位无符号整数，但在实际的调用中：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> s
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">192</span>         switch <span style="color:#ff79c6">(</span><span style="color:#8be9fd;font-style:italic">type</span><span style="color:#ff79c6">)</span> <span style="color:#ff79c6">{</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> s
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">198</span>             <span style="color:#ff79c6">case</span> FFI_TYPE_SINT32: *<span style="color:#ff79c6">(</span>uint32_t *<span style="color:#ff79c6">)</span><span style="color:#8be9fd;font-style:italic">data</span> <span style="color:#ff79c6">=</span> value; break;
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">(</span>gdb<span style="color:#ff79c6">)</span> p <span style="color:#8be9fd;font-style:italic">type</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$1</span> <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">10</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>被当作是一个指向 <code>uint32_t</code> 的指针了，在接下来的写入操作中，只写入了 32 bits 的数据。</p>
+<p>根据 <code>switch</code> 可以清楚得知：<code>type</code> 变量在此处的值为 10，对应的宏是 <code>FFI_TYPE_SINT32</code> 而不是我们预期的 <code>FFI_TYPE_UINT64</code>。</p>
+<p>通过查阅相关 man page 可以得知，在使用 libffi 调用函数时，负责接收函数返回值的类型（<code>rint</code> 的类型）需要至少 <code>sizeof(ffi_arg)</code> 大小
+（也就是 <code>FFI_TYPE_UINT64</code> 或 <code>FFI_TYPE_SINT64</code>）。</p>
+<h3 id="结论">
+  结论
+  <a class="heading-link" href="#%e7%bb%93%e8%ae%ba">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>此处 RISC-V port 的 libffi 内部并未合理处理 「被调用函数」 返回值不足 <code>sizeof(ffi_arg)</code> 的情况。导致向一块 64bits 内存（调用方）写入了
+32bits 的数字（被调用方）：</p>
+<p>可以看到高位部分包含之前未初始化的垃圾数据，只有低位被写入了 1：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-txt" data-lang="txt"><span style="display:flex;"><span>调用前 rint = 72057593903531392 也就是 0xFFFFFFF7FD4580
+</span></span><span style="display:flex;"><span>调用后 rint = 72057589742960641 也就是 0xFFFFFF00000001
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="修">
+  修
+  <a class="heading-link" href="#%e4%bf%ae">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>那么现在就要修改代码，使其使用正确的返回值类型，发现已经有人 PR：<br>
+<a href="https://github.com/libffi/libffi/pull/680">https://github.com/libffi/libffi/pull/680</a></p>
+<p>这个 PR 添加了判断「被调用函数返回值类型」的符号性<br>
+并根据系统 bits 数，规范地选用 <code>FFI_TYPE_{S,U}INT{32,64}</code> 中的其中一种。</p>
+<p>所以现在只需要将其 <a href="https://github.com/felixonmars/archriscv-packages/pull/1182">backport</a> 回我们正在使用的版本即可。</p>
+<h2 id="思考">
+  思考
+  <a class="heading-link" href="#%e6%80%9d%e8%80%83">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>在后期调试的过程中，我忘记看 manual page，不清楚「函数返回值 convention」 （也就是，显式规定返回值：需要至少能放下一个 <code>ffi_arg</code> 这一部分）。
+使得后续 debug 过程遇到阻碍，在后续的工作中要注意查阅相关文档。</p>
+<p>以及，他们自己不跑单元测试的吗？</p>
+<p>这篇文章咕咕咕了大概俩月才终于写完 :） 🎉🎉🎉</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        <div class="comments">
+    <script>
+  
+    let getTheme = window.localStorage && window.localStorage.getItem("colorscheme");
+  
+    getTheme = getTheme == null ? '' : getTheme;
+    
+    let theme = getTheme === 'dark' ? 'github-dark' : 'github-light';
+    let s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo', 'moodyhunter\/moodyhunter.github.io');
+    s.setAttribute('issue-term', 'pathname');
+    s.setAttribute('theme', theme);
+    s.setAttribute('crossorigin', 'anonymous');
+    s.setAttribute('async', '');
+    document.querySelector('div.comments').innerHTML = '';
+    document.querySelector('div.comments').appendChild(s);
+  
+    </script>
+    </div>
+      </footer>
+    </article>
+
+    
+  </section>
+
+    </div>
+
+    <footer class="footer">
+  <section class="container">
+    ©
+    
+      2021 -
+    
+    2022
+     Moody 
+    ·
+    
+       <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA-4.0</a>
+    ·
+    
+     <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+  </section>
+</footer>
+
+  </main>
+
+  
+  
+  <script src="/js/coder.min.236049395dc3682fb2719640872958e12f1f24067bb09c327b233e6290c7edac.js" integrity="sha256-I2BJOV3DaC&#43;ycZZAhylY4S8fJAZ7sJwyeyM&#43;YpDH7aw="></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>wasm on Moody&#39;s</title>
+    <link>https://mooody.me/tags/wasm/</link>
+    <description>Recent content in wasm on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Sun, 30 May 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://mooody.me/tags/wasm/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>从源码编译 Qt6 for WASM - Part 2</title>
+      <link>https://mooody.me/posts/2021-05/qt-build-from-source-2/</link>
+      <pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/qt-build-from-source-2/</guid>
+      <description>时间过得好快，自从上次发 post 已经过了一周
+趁着深夜停电正好能总结一下这周掉进的坑（我保证没有咕咕咕） 1. &amp;ldquo;Qt Host Build&amp;rdquo;? 你看：
+-- Searching for tool &amp;#39;Qt6::moc&amp;#39; in package Qt6CoreTools. CMake Warning at cmake/QtToolHelpers.cmake:83 (find_package): Could not find a configuration file for package &amp;#34;Qt6CoreTools&amp;#34; that is compatible with requested version &amp;#34;6.2.0&amp;#34;. The following configuration files were considered but not accepted: /lib/cmake/Qt6CoreTools/Qt6CoreToolsConfig.cmake, version: 6.1.0 Call Stack (most recent call first): src/tools/moc/CMakeLists.txt:8 (qt_internal_add_tool) CMake Error at cmake/QtToolHelpers.cmake:109 (message): The tool &amp;#34;Qt6::moc&amp;#34; was not found in the Qt6CoreTools package.</description>
+    </item>
+    
+    <item>
+      <title>从源码编译 Qt6 for WASM - Part 1</title>
+      <link>https://mooody.me/posts/2021-05/qt-build-from-source/</link>
+      <pubDate>Mon, 24 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/qt-build-from-source/</guid>
+      <description>1. Qt6 时光荏苒，Qt6 发布 已经是去年的事情，截止到写文章的时候 Qt 6.1 都已经发布很久
+Qt5 和 6 之间一个重大的改变就是 Build System 从 qmake 转向了 CMake （太好了！），而后者有更多的 C/C++ 项目支持。 （这数量级之差不用我多说啥了吧）
+Qt 6.0 主要的目标是 &amp;ldquo;能用就行&amp;rdquo;，因此他们只在 release 里面包含了
+qtbase， qtdeclarative， qt5compat， qtshadertools， qtwayland 和 qtquick3d 这些相对基础的组件。 Qt 6.1 在此基础上又增加了
+qtcharts， qtdatavis3d， qtimageformats， qtnetworkauth， qtvirtualkeyboard 和 qtlottie 相比之下 6.1 包含的组件已经很多了
+2. WASM 我心心念念的 Qt for WASM 还是没来。
+后来看到 QTBUG-87471 才知道还得等到 Qt 6.2，这让我萌生了从源码编译的冲动
+3. “能编译了吗？” 因为要编译的是 dev 分支的 Qt6，我决定用 git 拉源码，还能随时 git pull 到最新的版本，于是开始 clone</description>
+    </item>
+    
+  </channel>
+</rss>

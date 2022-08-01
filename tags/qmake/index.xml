@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>qmake on Moody&#39;s</title>
+    <link>https://mooody.me/tags/qmake/</link>
+    <description>Recent content in qmake on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Thu, 28 Apr 2022 15:44:00 +0100</lastBuildDate><atom:link href="https://mooody.me/tags/qmake/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>QProcess in Qemu - A Detailed Explanation</title>
+      <link>https://mooody.me/posts/2022-04/qprocess-in-qemu/</link>
+      <pubDate>Thu, 28 Apr 2022 15:44:00 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/qprocess-in-qemu/</guid>
+      <description>It&amp;rsquo;s been a long time since my promise to publish a detailed write-up on what the hell was actually going on inside qemu.
+Qt, for its Unix QProcess implementation, utilises forkfd library, (See also: https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd) as a helper library to fork subprocess.
+pidfd is a new kernel feature, which has just been added to the kernel upon v5.2.
+Since this merge, Qt added a new configuration feature (forkfd_pidfd, &amp;ldquo;CLONE_PIDFD support in forkfd&amp;rdquo;) and it was default to ON on Linux.</description>
+    </item>
+    
+    <item>
+      <title>记一次 debug qmake</title>
+      <link>https://mooody.me/posts/2022-04/archrv-qmake6/</link>
+      <pubDate>Thu, 14 Apr 2022 00:32:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/archrv-qmake6/</guid>
+      <description>原本想甩锅 Qt，但后来发现小丑竟是 qemu :)
+正片开始 初来乍到 PLCT::archrv-pkg，作为新人总想快点贡献点什么，于是各种翻 build log。
+qalculate-qt:
+/usr/lib/qt6/mkspecs/features/toolchain.prf:76: Variable QMAKE_CXX.COMPILER_MACROS is not defined. Project ERROR: failed to parse default search paths from compiler output 打包机扔出了这么个错误，深受 qmake 其害的我看到这就准备开 bugreports.qt.io
+但是转头一想：肯定群里的大佬早就看到了这个问题，应该已经在 WIP 了吧，于是在群消息记录里搜了一下， 发现果然早在上个月 24 号（两周前左右）就在讨论这个问题了。
+可惜没能解决，翻记录说是 qemu 里独有的问题，换到物理机上就没事了。
+抱着试一试万一能给 Qt 水个 bugreport 的心态，我打开了这个文件：features/toolchain.prf 并找到第 76 行：
+73: cache($${target_prefix}.$$v, set stash, $$v) 74: $${target_prefix}.COMPILER_MACROS += $$v 75: } 76: cache($${target_prefix}.COMPILER_MACROS, set stash) &amp;lt;- 这里 77: } else { 78: # load from the cache 很明显是一个 qmake 变量 &amp;ldquo;某些东西.</description>
+    </item>
+    
+  </channel>
+</rss>

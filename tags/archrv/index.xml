@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ArchRV on Moody&#39;s</title>
+    <link>https://mooody.me/tags/archrv/</link>
+    <description>Recent content in ArchRV on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Thu, 28 Apr 2022 15:44:00 +0100</lastBuildDate><atom:link href="https://mooody.me/tags/archrv/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>QProcess in Qemu - A Detailed Explanation</title>
+      <link>https://mooody.me/posts/2022-04/qprocess-in-qemu/</link>
+      <pubDate>Thu, 28 Apr 2022 15:44:00 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/qprocess-in-qemu/</guid>
+      <description>It&amp;rsquo;s been a long time since my promise to publish a detailed write-up on what the hell was actually going on inside qemu.
+Qt, for its Unix QProcess implementation, utilises forkfd library, (See also: https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd) as a helper library to fork subprocess.
+pidfd is a new kernel feature, which has just been added to the kernel upon v5.2.
+Since this merge, Qt added a new configuration feature (forkfd_pidfd, &amp;ldquo;CLONE_PIDFD support in forkfd&amp;rdquo;) and it was default to ON on Linux.</description>
+    </item>
+    
+    <item>
+      <title>ArchRV - BuggyFFI</title>
+      <link>https://mooody.me/posts/2022-04/archrv-libffi/</link>
+      <pubDate>Tue, 19 Apr 2022 23:09:10 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/archrv-libffi/</guid>
+      <description>EXPAND MY INTEGER!
+libffi
+libffi 是什么？ A portable foreign-function interface library.
+说人话就是：……算了你自己去看吧
+libffi 怎么了？ TLDR：测试炸了 or, 单元测试文件 ./testsuite/libffi.call/strlen.c 第 32 行 1 2 3 30: s = &amp;#34;a&amp;#34;; 31: ffi_call(&amp;amp;cif, FFI_FN(my_strlen), &amp;amp;rint, values); 32: CHECK(rint == 1); 的 CHECK 失败了（ rint 不等于 1 了）
+libffi 测试为什么炸了？ 首先来看代码（经过简化）：
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 // testsuite/libffi.call/strlen.c size_t ABI_ATTR my_strlen(char *s) { return (strlen(s)); } int main (void) { // 省略了部分无关代码 char *s = &amp;#34;a&amp;#34;; void *values[MAX_ARGS]; values[0] = (void*) &amp;amp;s; ffi_arg rint; ffi_call(&amp;amp;cif, FFI_FN(my_strlen), &amp;amp;rint, values); CHECK(rint == 1); } 观测 经过两分钟的代码观测，从以上代码块 L12 来看，rint 是一个 ffi_arg 类型的变量，经过阅读 header 可以得知，ffi_arg 是一个 64 位无符号整数类型：</description>
+    </item>
+    
+    <item>
+      <title>记一次 debug qmake</title>
+      <link>https://mooody.me/posts/2022-04/archrv-qmake6/</link>
+      <pubDate>Thu, 14 Apr 2022 00:32:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/archrv-qmake6/</guid>
+      <description>原本想甩锅 Qt，但后来发现小丑竟是 qemu :)
+正片开始 初来乍到 PLCT::archrv-pkg，作为新人总想快点贡献点什么，于是各种翻 build log。
+qalculate-qt:
+/usr/lib/qt6/mkspecs/features/toolchain.prf:76: Variable QMAKE_CXX.COMPILER_MACROS is not defined. Project ERROR: failed to parse default search paths from compiler output 打包机扔出了这么个错误，深受 qmake 其害的我看到这就准备开 bugreports.qt.io
+但是转头一想：肯定群里的大佬早就看到了这个问题，应该已经在 WIP 了吧，于是在群消息记录里搜了一下， 发现果然早在上个月 24 号（两周前左右）就在讨论这个问题了。
+可惜没能解决，翻记录说是 qemu 里独有的问题，换到物理机上就没事了。
+抱着试一试万一能给 Qt 水个 bugreport 的心态，我打开了这个文件：features/toolchain.prf 并找到第 76 行：
+73: cache($${target_prefix}.$$v, set stash, $$v) 74: $${target_prefix}.COMPILER_MACROS += $$v 75: } 76: cache($${target_prefix}.COMPILER_MACROS, set stash) &amp;lt;- 这里 77: } else { 78: # load from the cache 很明显是一个 qmake 变量 &amp;ldquo;某些东西.</description>
+    </item>
+    
+    <item>
+      <title>PLCT 初体验</title>
+      <link>https://mooody.me/posts/2022-04/plct-experience-1/</link>
+      <pubDate>Thu, 14 Apr 2022 00:07:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/plct-experience-1/</guid>
+      <description>&amp;ldquo;啊？ 系统镜像还没有啊？&amp;rdquo;
+本篇文章记录的是我在 PLCT 实习当工具人的初体验
+《开端》 就是羡慕。
+有一著名人士曾经说过：群我不 plct，有一瞬间我确实感觉到: &amp;ldquo;怎么他们都在？&amp;quot;，于是我开始 四处调查，我想起之前在 B 站看过 PLCT 编译器小组的 Report 感觉非常厉害，在内心里一瞬间燃 起了一株小小的火苗：&amp;ldquo;我也想像他们一样&amp;rdquo;。
+在经过了长达（一天）的调查以后，我终于全面了解了实习的不同种类，（身为 Arch 用户外加身边很多朋友都在 Arch RISC-V 打包小组），我也就选择了这里。我还了解到了 ArchRV 小组的申请要求 ： 一个 addpkg PR 和简历（据说不看？，但还是战战兢兢地完善了一下），一篇不长于 300 汉字的小短文。
+花了一晚上时间准备好资料，终于把邮件发了出去（几个 addpkg 的包也都合并了，都是很简单的修复 简直不敢说是 fix），关机睡觉
+第二天 KMail 坑我 :) 明明已经收到了回邮，但是并未提醒我新邮件，直接咕了
+第三天 一个自称 Wu Wei 的人联系到了我：
+我: 我想问一下，有面试环节什么的吗？
+对面：面试了，面试通过了
+我: ？？？？？
+接下来就是各种资料的填写，签字，提交一系列 paperwork，很标准地走个流程。
+我的第一个正经的 fix 下一篇再说</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Crashes on Moody&#39;s</title>
+    <link>https://mooody.me/tags/crashes/</link>
+    <description>Recent content in Crashes on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Sat, 18 Jun 2022 13:10:07 +0100</lastBuildDate><atom:link href="https://mooody.me/tags/crashes/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>流水帐 之 &#39;JasPer 3&#39;</title>
+      <link>https://mooody.me/posts/2022-06/jasper3-crash-analysis/</link>
+      <pubDate>Sat, 18 Jun 2022 13:10:07 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-06/jasper3-crash-analysis/</guid>
+      <description>放假了! 由于 qmlls 崩溃了一整天，我终于放弃调查了，于是开始水群：
+#archlinux-cn:
+CuiHao: 最近 Spectacle 和 Plasmashell 在截图后疯狂 segfault，有人遇到吗
+CuiHao: #4 0x00007fd47872e774 in jas_stream_putc_func () from /usr/lib/libjasper.so.6 Spactacle 崩这儿了
+hosiet: libjapser? 为啥 arch 还在用这个
+CuiHao: https://bugs.kde.org/show_bug.cgi?id=455362 扔了个 bug，但感觉是 qt 的 bug
+csslayer: 不能修一下吗，是不是什么时候就和 jasper 不兼容了
+CuiHao: https://bugreports.qt.io/browse/QTBUG-104398 报了反正
+仔细查看 QTBUG-104398 后，我也在本地成功用 Qt 6.5 复现了这个 crash：
+首先写一个 cpp
+1 2 3 4 5 6 7 8 9 10 11 12 13 #include &amp;lt;QCoreApplication&amp;gt; #include &amp;lt;QImage&amp;gt; int main(int argc, char *argv[]) { QCoreApplication a(argc, argv); QImage image(64, 64, QImage::Format_Grayscale8); image.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+
+
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; block-all-mixed-content; default-src 'self'; child-src 'self'; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/; form-action 'self' https://utteranc.es; frame-src 'self' https://utteranc.es; img-src 'self' https:; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com/ https://cdn.jsdelivr.net/ https://utteranc.es; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/ https://utteranc.es/ https://static.cloudflareinsights.com/; prefetch-src 'self' https://utteranc.es; connect-src 'self' https://utteranc.es;">
+
+
+
+
+<meta name="author" content="Moody">
+<meta name="description" content="放假了! 由于 qmlls 崩溃了一整天，我终于放弃调查了，于是开始水群：
+#archlinux-cn:
+CuiHao: 最近 Spectacle 和 Plasmashell 在截图后疯狂 segfault，有人遇到吗
+CuiHao: #4 0x00007fd47872e774 in jas_stream_putc_func () from /usr/lib/libjasper.so.6 Spactacle 崩这儿了
+hosiet: libjapser? 为啥 arch 还在用这个
+CuiHao: https://bugs.kde.org/show_bug.cgi?id=455362 扔了个 bug，但感觉是 qt 的 bug
+csslayer: 不能修一下吗，是不是什么时候就和 jasper 不兼容了
+CuiHao: https://bugreports.qt.io/browse/QTBUG-104398 报了反正
+仔细查看 QTBUG-104398 后，我也在本地成功用 Qt 6.5 复现了这个 crash：
+首先写一个 cpp
+1 2 3 4 5 6 7 8 9 10 11 12 13 #include &lt;QCoreApplication&gt; #include &lt;QImage&gt; int main(int argc, char *argv[]) { QCoreApplication a(argc, argv); QImage image(64, 64, QImage::Format_Grayscale8); image.">
+<meta name="keywords" content="blog,personal,中文,个人">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="流水帐 之 &#39;JasPer 3&#39;"/>
+<meta name="twitter:description" content="放假了! 由于 qmlls 崩溃了一整天，我终于放弃调查了，于是开始水群：
+#archlinux-cn:
+CuiHao: 最近 Spectacle 和 Plasmashell 在截图后疯狂 segfault，有人遇到吗
+CuiHao: #4 0x00007fd47872e774 in jas_stream_putc_func () from /usr/lib/libjasper.so.6 Spactacle 崩这儿了
+hosiet: libjapser? 为啥 arch 还在用这个
+CuiHao: https://bugs.kde.org/show_bug.cgi?id=455362 扔了个 bug，但感觉是 qt 的 bug
+csslayer: 不能修一下吗，是不是什么时候就和 jasper 不兼容了
+CuiHao: https://bugreports.qt.io/browse/QTBUG-104398 报了反正
+仔细查看 QTBUG-104398 后，我也在本地成功用 Qt 6.5 复现了这个 crash：
+首先写一个 cpp
+1 2 3 4 5 6 7 8 9 10 11 12 13 #include &lt;QCoreApplication&gt; #include &lt;QImage&gt; int main(int argc, char *argv[]) { QCoreApplication a(argc, argv); QImage image(64, 64, QImage::Format_Grayscale8); image."/>
+
+<meta property="og:title" content="流水帐 之 &#39;JasPer 3&#39;" />
+<meta property="og:description" content="放假了! 由于 qmlls 崩溃了一整天，我终于放弃调查了，于是开始水群：
+#archlinux-cn:
+CuiHao: 最近 Spectacle 和 Plasmashell 在截图后疯狂 segfault，有人遇到吗
+CuiHao: #4 0x00007fd47872e774 in jas_stream_putc_func () from /usr/lib/libjasper.so.6 Spactacle 崩这儿了
+hosiet: libjapser? 为啥 arch 还在用这个
+CuiHao: https://bugs.kde.org/show_bug.cgi?id=455362 扔了个 bug，但感觉是 qt 的 bug
+csslayer: 不能修一下吗，是不是什么时候就和 jasper 不兼容了
+CuiHao: https://bugreports.qt.io/browse/QTBUG-104398 报了反正
+仔细查看 QTBUG-104398 后，我也在本地成功用 Qt 6.5 复现了这个 crash：
+首先写一个 cpp
+1 2 3 4 5 6 7 8 9 10 11 12 13 #include &lt;QCoreApplication&gt; #include &lt;QImage&gt; int main(int argc, char *argv[]) { QCoreApplication a(argc, argv); QImage image(64, 64, QImage::Format_Grayscale8); image." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://mooody.me/posts/2022-06/jasper3-crash-analysis/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-06-18T13:10:07+01:00" />
+<meta property="article:modified_time" content="2022-06-18T13:10:07+01:00" />
+
+
+
+
+  <title>Moody&#39;s</title>
+
+  
+  <link rel="canonical" href="https://mooody.me/posts/2022-06/jasper3-crash-analysis/">
+  
+
+  <link rel="preload" href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as="font" type="font/woff2" crossorigin>
+
+
+  
+  
+  <link rel="stylesheet" href="/css/coder.min.6b1a4fbc48955b72aea7913e43fabeb45e8bc120da5aa41b598dd33adcac4b59.css" integrity="sha256-axpPvEiVW3Kup5E&#43;Q/q&#43;tF6LwSDaWqQbWY3TOtysS1k=" crossorigin="anonymous" media="screen" />
+
+
+
+
+
+  
+  
+    
+    
+    <link rel="stylesheet" href="/css/coder-dark.min.39e41a7f16bdf8cb16e43cae7d714fa1016f1d2d2898a5b3f27f42c9979204e2.css" integrity="sha256-OeQafxa9&#43;MsW5DyufXFPoQFvHS0omKWz8n9CyZeSBOI=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+   
+
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/cards.min.66689eb6794f4d37bf49748d47a91d8dc5918d78d800a8fae4f1a9649ce35145.css" integrity="sha256-ZmietnlPTTe/SXSNR6kdjcWRjXjYAKj65PGpZJzjUUU=" crossorigin="anonymous" media="screen" />
+  
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/spoiler.min.6758d9b6919e25bb0a3c105fb53c53d4329838c7c3c6c41a4443a232bcca0886.css" integrity="sha256-Z1jZtpGeJbsKPBBftTxT1DKYOMfDxsQaREOiMrzKCIY=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+  <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" href="/images/favicon.ico" sizes="16x16">
+
+<link rel="apple-touch-icon" href="/images/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#5bbad5">
+
+
+  
+
+  <meta name="generator" content="Hugo 0.101.0" />
+
+
+  
+
+</head>
+
+
+
+
+
+
+
+<body class="preload-transitions colorscheme-auto">
+  
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+  <main class="wrapper">
+    <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      Moody&#39;s
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/">主页</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">文章</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/friends/">友链</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">我</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://g.mooody.me/d/home/server-status?orgId=2">服务状态</a>
+            </li>
+          
+        
+        
+          
+          
+          
+            
+          
+            
+              
+                <li class="navigation-item menu-separator">
+                  <span>|</span>
+                </li>
+                
+              
+              <li class="navigation-item">
+                <a href="https://mooody.me/en/">🇬🇧</a>
+              </li>
+            
+          
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+    <div class="content">
+      
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://mooody.me/posts/2022-06/jasper3-crash-analysis/">
+              流水帐 之 &#39;JasPer 3&#39;
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime="2022-06-18T13:10:07&#43;01:00">
+                June 18, 2022
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <span class="tag">
+      <a href="/tags/qt/">Qt</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/jasper/">JasPer</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/crashes/">Crashes</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/linux/">Linux</a>
+    </span></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <h1 id="放假了">
+  <strong>放假了!</strong>
+  <a class="heading-link" href="#%e6%94%be%e5%81%87%e4%ba%86">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h1>
+<p><del>由于 qmlls 崩溃了一整天，我终于放弃调查了，于是开始水群：</del></p>
+<p><code>#archlinux-cn</code>:</p>
+<blockquote>
+<p><strong>CuiHao</strong>: <em>最近 Spectacle 和 Plasmashell 在截图后疯狂 segfault，有人遇到吗</em></p>
+<p><strong>CuiHao</strong>: <code>#4 0x00007fd47872e774 in jas_stream_putc_func () from /usr/lib/libjasper.so.6</code> <em>Spactacle 崩这儿了</em></p>
+<p><strong>hosiet</strong>: <em>libjapser? 为啥 arch 还在用这个</em></p>
+<p><strong>CuiHao</strong>: <em><a href="https://bugs.kde.org/show_bug.cgi?id=455362">https://bugs.kde.org/show_bug.cgi?id=455362</a></em> <em>扔了个 bug，但感觉是 qt 的 bug</em></p>
+<p><strong>csslayer</strong>: <em>不能修一下吗，是不是什么时候就和 jasper 不兼容了</em></p>
+<p><strong>CuiHao</strong>: <em><a href="https://bugreports.qt.io/browse/QTBUG-104398">https://bugreports.qt.io/browse/QTBUG-104398</a> 报了反正</em></p>
+</blockquote>
+<p><del>仔细</del>查看 <code>QTBUG-104398</code> 后，我也在本地成功用 Qt 6.5 复现了这个 crash：</p>
+<p>首先写一个 cpp</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#ff79c6">#include</span> <span style="color:#ff79c6">&lt;QCoreApplication&gt;</span><span style="color:#ff79c6">
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6">#include</span> <span style="color:#ff79c6">&lt;QImage&gt;</span><span style="color:#ff79c6">
+</span></span></span><span style="display:flex;"><span><span style="color:#ff79c6"></span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd">int</span> <span style="color:#50fa7b">main</span>(<span style="color:#8be9fd">int</span> argc, <span style="color:#8be9fd">char</span> <span style="color:#ff79c6">*</span>argv[])
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    QCoreApplication a(argc, argv);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    QImage image(<span style="color:#bd93f9">64</span>, <span style="color:#bd93f9">64</span>, QImage<span style="color:#ff79c6">::</span>Format_Grayscale8);
+</span></span><span style="display:flex;"><span>    image.fill(<span style="color:#bd93f9">0</span>);
+</span></span><span style="display:flex;"><span>    image.save(<span style="color:#f1fa8c">&#34;test.jp2&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>然后尝试编译：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">9
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>- &gt; <span style="color:#8be9fd;font-style:italic">export</span> <span style="color:#8be9fd;font-style:italic">MY_QT_PATH</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$HOME</span><span style="color:#f1fa8c">/Projects/qt/build/qtbase&#34;</span>
+</span></span><span style="display:flex;"><span>~ &gt; g++ ./main.cpp <span style="color:#f1fa8c">\
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c"></span>    -I <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$MY_QT_PATH</span><span style="color:#f1fa8c">/include&#34;</span> <span style="color:#f1fa8c">\
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c"></span>    -I <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$MY_QT_PATH</span><span style="color:#f1fa8c">/include/QtCore&#34;</span> <span style="color:#f1fa8c">\
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c"></span>    -I <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$MY_QT_PATH</span><span style="color:#f1fa8c">/include/QtGui&#34;</span> <span style="color:#f1fa8c">\
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c"></span>    -L <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$MY_QT_PATH</span><span style="color:#f1fa8c">/lib&#34;</span> <span style="color:#f1fa8c">\
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c"></span>    -lQt6Core <span style="color:#f1fa8c">\
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c"></span>    -lQt6Gui <span style="color:#f1fa8c">\
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c"></span>    -o <span style="color:#8be9fd;font-style:italic">test</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>运行并进行爆炸观测：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>~ &gt; <span style="color:#8be9fd;font-style:italic">LD_LIBRARY_PATH</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$MY_QT_PATH</span><span style="color:#f1fa8c">/lib&#34;</span> ./test
+</span></span><span style="display:flex;"><span>WARNING: YOUR CODE IS RELYING ON DEPRECATED FUNCTIONALITY IN THE JASPER
+</span></span><span style="display:flex;"><span>LIBRARY.  THIS FUNCTIONALITY WILL BE REMOVED IN THE NEAR FUTURE. PLEASE
+</span></span><span style="display:flex;"><span>FIX THIS PROBLEM BEFORE YOUR CODE STOPS WORKING.
+</span></span><span style="display:flex;"><span>deprecation warning: use of jas_init is deprecated
+</span></span><span style="display:flex;"><span>warning: The application program did not <span style="color:#8be9fd;font-style:italic">set</span> the memory limit <span style="color:#ff79c6">for</span> the
+</span></span><span style="display:flex;"><span>JasPer library.
+</span></span><span style="display:flex;"><span>warning: The JasPer memory limit is being defaulted to a value that may be
+</span></span><span style="display:flex;"><span>inappropriate <span style="color:#ff79c6">for</span> the system.  If the default is too small, some reasonable
+</span></span><span style="display:flex;"><span>encoding/decoding operations will fail.  If the default is too large, security
+</span></span><span style="display:flex;"><span>vulnerabilities will result <span style="color:#ff79c6">(</span>e.g., decoding a malicious image could
+</span></span><span style="display:flex;"><span>exhaust all memory and crash the system.
+</span></span><span style="display:flex;"><span>warning: setting JasPer memory limit to <span style="color:#bd93f9">16715984896</span> bytes
+</span></span><span style="display:flex;"><span>fish: Job 1, <span style="color:#f1fa8c">&#39;./test&#39;</span> terminated by signal SIGSEGV <span style="color:#ff79c6">(</span>Address boundary error<span style="color:#ff79c6">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>首先映入眼帘的就是一串大写的 <code>WARNING</code>：&ldquo;你的代码用了老旧 API，这 API 马上就要删了 blablablabla……&quot;，随后是
+关键性的 <code>use of jas_init is deprecated</code><br>
+而这之后是一个没有设置内存上限的警告<br>
+再之后就是爆炸现场了：<code>'./test' terminated by signal SIGSEGV</code></p>
+<p>首先使用 gdb 进行一个 backtrace 的查：</p>
+<p><img src="jasper-qimage-colortable-gdb.png" alt="gdb-colortable"></p>
+<p>可以观测到（<code>#6</code>）这里的一个 ASSERT 炸掉了：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>QRgb QImage<span style="color:#ff79c6">::</span>color(<span style="color:#8be9fd">int</span> i) <span style="color:#ff79c6">const</span>
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    Q_ASSERT(i <span style="color:#ff79c6">&lt;</span> colorCount());
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> d <span style="color:#ff79c6">?</span> d<span style="color:#ff79c6">-&gt;</span>colortable.at(i) <span style="color:#ff79c6">:</span> QRgb(uint(<span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>));
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>继续跟进后，发现 <code>colorCount()</code> 的返回值是 <code>0</code>，即 Color Table 的大小为 0，后来经过研究发现是这个
+复现例子写错了：</p>
+<blockquote>
+<p>If format is an indexed color format, the image color table is initially empty
+and must be sufficiently expanded with <code>setColorCount()</code> or <code>setColorTable()</code> before
+the image is used.</p>
+</blockquote>
+<p>（尽管同样是崩溃，但 <code>QImage::Format_Grayscale8</code> 导致没初始化 color table 触发的崩溃与 Jasper 无关）</p>
+<p>于是把 <code>QImage::Format_Grayscale8</code> 改成 <code>QImage::Format_RGB32</code> 后，得到了另一个错误：</p>
+<p><img src="jasper-memory-too-large.png" alt="gdb2"></p>
+<p>再次查看源码，可以得知 <code>memory_stream</code> 其实是个 <code>nullptr</code>：</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">8
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#6272a4">// Open an empty jasper stream that grows automatically
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>jas_stream_t <span style="color:#ff79c6">*</span> memory_stream <span style="color:#ff79c6">=</span> jas_stream_memopen(<span style="color:#bd93f9">0</span>, <span style="color:#ff79c6">-</span><span style="color:#bd93f9">1</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// Jasper wants a non-const string.
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#8be9fd">char</span> <span style="color:#ff79c6">*</span>str <span style="color:#ff79c6">=</span> qstrdup(jasperFormatString.toLatin1().constData());
+</span></span><span style="display:flex;"><span>jas_image_encode(jasper_image, memory_stream, fmtid, str);
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">delete</span>[] str;
+</span></span><span style="display:flex;"><span>jas_stream_flush(memory_stream);
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>最后定位到根本原因是 <code>jas_stream_memopen</code> 的第二个参数不应为 <code>-1</code>，而应该是 0。</p>
+<p>传入 <code>-1</code> 后会因为参数类型是 <code>size_t</code> 而被转换成 <code>18446744073709551615</code>，由于无法进行如此巨大量的 malloc 分配，
+<code>jas_stream_memopen</code> 返回了 0，也最终导致在后续函数中进行了空指针解引用。</p>
+<p>于是一篇文章就这么水完了 :)</p>
+<ul>
+<li>为对应的函数添加 Deprecated 警告: <a href="https://github.com/jasper-software/jasper/pull/327">https://github.com/jasper-software/jasper/pull/327</a></li>
+<li>为 JasPer 3 使用新的 API <a href="https://codereview.qt-project.org/c/qt/qtimageformats/+/417088">https://codereview.qt-project.org/c/qt/qtimageformats/+/417088</a></li>
+<li>修复错误的 buffer size: <a href="https://codereview.qt-project.org/c/qt/qtimageformats/+/417082">https://codereview.qt-project.org/c/qt/qtimageformats/+/417082</a></li>
+</ul>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        <div class="comments">
+    <script>
+  
+    let getTheme = window.localStorage && window.localStorage.getItem("colorscheme");
+  
+    getTheme = getTheme == null ? '' : getTheme;
+    
+    let theme = getTheme === 'dark' ? 'github-dark' : 'github-light';
+    let s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo', 'moodyhunter\/moodyhunter.github.io');
+    s.setAttribute('issue-term', 'pathname');
+    s.setAttribute('theme', theme);
+    s.setAttribute('crossorigin', 'anonymous');
+    s.setAttribute('async', '');
+    document.querySelector('div.comments').innerHTML = '';
+    document.querySelector('div.comments').appendChild(s);
+  
+    </script>
+    </div>
+      </footer>
+    </article>
+
+    
+  </section>
+
+    </div>
+
+    <footer class="footer">
+  <section class="container">
+    ©
+    
+      2021 -
+    
+    2022
+     Moody 
+    ·
+    
+       <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA-4.0</a>
+    ·
+    
+     <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+  </section>
+</footer>
+
+  </main>
+
+  
+  
+  <script src="/js/coder.min.236049395dc3682fb2719640872958e12f1f24067bb09c327b233e6290c7edac.js" integrity="sha256-I2BJOV3DaC&#43;ycZZAhylY4S8fJAZ7sJwyeyM&#43;YpDH7aw="></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</body>
+
+</html>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Moody&#39;s</title>
+    <link>https://mooody.me/en/</link>
+    <description>Recent content on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language><atom:link href="https://mooody.me/en/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>https://mooody.me/en/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/en/about/</guid>
+      <description> About Me It&amp;rsquo;s damn hard to make up a memorable name
+He/him, sometimes in English but otherwise in Chinese. Studying CS at The University of Warwick C++, C, Go, Python, QML, JS, fish-shell VisualBasic, C#, Haskell&amp;hellip; QtCreator yyds VSCode is fine&amp;hellip; tho. My Wakatime Page: https://wakatime.com/@moodyhunter What&amp;rsquo;s gonna be in the blog? Some Qt Some ArchRV! And&amp;hellip; idk </description>
+    </item>
+    
+  </channel>
+</rss>

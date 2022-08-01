@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>cmake on Moody&#39;s</title>
+    <link>https://mooody.me/tags/cmake/</link>
+    <description>Recent content in cmake on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Fri, 13 May 2022 02:09:05 +0100</lastBuildDate><atom:link href="https://mooody.me/tags/cmake/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android &#39;Deploy&#39; Qt?</title>
+      <link>https://mooody.me/posts/2022-05/android-deploy-qt/</link>
+      <pubDate>Fri, 13 May 2022 02:09:05 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-05/android-deploy-qt/</guid>
+      <description>你这 androiddeployqt 可能没法正常 deploy Qt 一些无聊的概念 Moody&amp;rsquo;s Utility Bot 是一个与此仓库 GitHub Actions 梦幻联动 的 Telegram Bot
+负责发送消息和最新 build 产物， 同时也负责提醒蔡队起来（出处：&amp;ldquo;我起来了&amp;rdquo;） Qt 是 ……
+这还用介绍吗 QtGraphicalEffects 是 ……
+Qt5 时期的一个 Qt module，顾名思义负责 “图形特效” 比如渐变，阴影甚至 GLSL 效果 但在 Qt6 中被 deprecate 了 但我硬是强行将其 port 到 Qt6，其实是一种 “又不是不能用” 的状态 《开端》？ 2022 年 5 月 1 日凌晨 1 点 00 分 56 秒：
+Moody&amp;rsquo;s Utils Bot:
+Successfully built the client app, [File : MoodyAppMain.</description>
+    </item>
+    
+    <item>
+      <title>Qt 6.3 中的一些 CMake 函数</title>
+      <link>https://mooody.me/posts/2022-02/qt-6.3-cmakefunctions/</link>
+      <pubDate>Thu, 24 Feb 2022 22:56:28 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-02/qt-6.3-cmakefunctions/</guid>
+      <description>写在前面 今天心血来潮想写点东西，发现之前挖的各种大坑都没填好…… dbq）
+说点什么呢 翻消息记录突然看到下面这条评论：
+作者写的挺好的，如果能把下面这个官网上面对这个模块功能描述加进去完美了&amp;hellip;
+哇） 居然在认真的看我的 Blog，突然有点被感动到。 那么今天就先来聊 Qt 6.3 中的 CMake 函数
+1. qt6_add_qml_module 先来说说大名鼎鼎（？）的 qt6_add_qml_module：
+细数近期的 Qt Declarative 库中的 commits 不难发现，Qt 还在给这个本就已经很复杂的函数添加参数：FOLLOW_FOREIGN_VERSIONING，SKIP_TYPE_REGISTRATION，NO_IMPORT_SCAN，NO_RESOURCE_TARGET_PATH，NO_PLUGIN
+这都啥玩意？ a. FOLLOW_FOREIGN_VERSIONING 没用过，也没看懂 Doc 在说什么
+b. SKIP_TYPE_REGISTRATION 震惊！这个函数居然没有对应官方文档！
+根据相关 commit 记载： 如果指定了参数，那么生成出的 qmldir 文件中将不会出现任何 QML 文件中的类型。
+意思就是运行时 &amp;ldquo;我想手动注册自己的类型&amp;rdquo; （使用 qmlRegister[Anonymous|Singleton]Type&amp;lt;T&amp;gt;(...) 一类的函数）
+c. NO_IMPORT_SCAN 理论上只适用于静态编译的 Qt （因为 Shared Qt 是支持加载动态链接的插件的（QML 组件高强度依赖 Qt Plugin System），而静态无法进行运行时加载 DLLs）
+默认情况下，静态编译的 Qt 会在执行 CMake 时运行 qmlimportscanner 扫描指定目录下所有 qml 文件的 import 列表，从而列出需要进行链接的库 （比如 QtCharts, QtWebEngine, QtPositioning, QtGraphicalEffects），这些库将会以 target_link_libraries 的形式链接到依赖他们的 QML 模块中，从而进行 「另一种形式的运行时加载」（可能会再水一篇说这个？）</description>
+    </item>
+    
+    <item>
+      <title>Qt 6 Porting Guide - CMake</title>
+      <link>https://mooody.me/posts/2021-09/qt6-cmake-porting-guide/</link>
+      <pubDate>Mon, 20 Sep 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-09/qt6-cmake-porting-guide/</guid>
+      <description>随着 Qt6.2 进入 rc 阶段 (Update: 24 Feb 2022: 其实现在 6.3 都出 Beta 了)，标志着 Qt6 各模块已经趋近完整，可以看到身边越来越多的项目开始了从 Qt5 迁移到 Qt6 繁重工作， 作为从 Qt6 alpha 还没发就尝试迁移的资深人员。鄙人自认为在 Qt6 / CMake 方面算是比较了解。
+直入主题 不同于 6.0，Qt 6.2 包含了更多的 CMake API，本文就要说说个人认为最晦涩难懂的 qt_add_qml_module：
+qt_add_qml_module 非常复杂，单参数就有 26 个，首先来看一下这个巨大函数的 signature
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 qt_add_qml_module( # 必需参数 target URI uri VERSION version # 可选参数 [PAST_MAJOR_VERSIONS ...] [STATIC | SHARED] [PLUGIN_TARGET plugin_target] [OUTPUT_DIRECTORY output_dir] [RESOURCE_PREFIX resource_prefix] [CLASS_NAME class_name] [TYPEINFO typeinfo] [IMPORTS .</description>
+    </item>
+    
+    <item>
+      <title>从源码编译 Qt6 for WASM - Part 2</title>
+      <link>https://mooody.me/posts/2021-05/qt-build-from-source-2/</link>
+      <pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/qt-build-from-source-2/</guid>
+      <description>时间过得好快，自从上次发 post 已经过了一周
+趁着深夜停电正好能总结一下这周掉进的坑（我保证没有咕咕咕） 1. &amp;ldquo;Qt Host Build&amp;rdquo;? 你看：
+-- Searching for tool &amp;#39;Qt6::moc&amp;#39; in package Qt6CoreTools. CMake Warning at cmake/QtToolHelpers.cmake:83 (find_package): Could not find a configuration file for package &amp;#34;Qt6CoreTools&amp;#34; that is compatible with requested version &amp;#34;6.2.0&amp;#34;. The following configuration files were considered but not accepted: /lib/cmake/Qt6CoreTools/Qt6CoreToolsConfig.cmake, version: 6.1.0 Call Stack (most recent call first): src/tools/moc/CMakeLists.txt:8 (qt_internal_add_tool) CMake Error at cmake/QtToolHelpers.cmake:109 (message): The tool &amp;#34;Qt6::moc&amp;#34; was not found in the Qt6CoreTools package.</description>
+    </item>
+    
+    <item>
+      <title>从源码编译 Qt6 for WASM - Part 1</title>
+      <link>https://mooody.me/posts/2021-05/qt-build-from-source/</link>
+      <pubDate>Mon, 24 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/posts/2021-05/qt-build-from-source/</guid>
+      <description>1. Qt6 时光荏苒，Qt6 发布 已经是去年的事情，截止到写文章的时候 Qt 6.1 都已经发布很久
+Qt5 和 6 之间一个重大的改变就是 Build System 从 qmake 转向了 CMake （太好了！），而后者有更多的 C/C++ 项目支持。 （这数量级之差不用我多说啥了吧）
+Qt 6.0 主要的目标是 &amp;ldquo;能用就行&amp;rdquo;，因此他们只在 release 里面包含了
+qtbase， qtdeclarative， qt5compat， qtshadertools， qtwayland 和 qtquick3d 这些相对基础的组件。 Qt 6.1 在此基础上又增加了
+qtcharts， qtdatavis3d， qtimageformats， qtnetworkauth， qtvirtualkeyboard 和 qtlottie 相比之下 6.1 包含的组件已经很多了
+2. WASM 我心心念念的 Qt for WASM 还是没来。
+后来看到 QTBUG-87471 才知道还得等到 Qt 6.2，这让我萌生了从源码编译的冲动
+3. “能编译了吗？” 因为要编译的是 dev 分支的 Qt6，我决定用 git 拉源码，还能随时 git pull 到最新的版本，于是开始 clone</description>
+    </item>
+    
+  </channel>
+</rss>

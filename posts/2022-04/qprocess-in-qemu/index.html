@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+
+
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; block-all-mixed-content; default-src 'self'; child-src 'self'; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/; form-action 'self' https://utteranc.es; frame-src 'self' https://utteranc.es; img-src 'self' https:; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com/ https://cdn.jsdelivr.net/ https://utteranc.es; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/ https://utteranc.es/ https://static.cloudflareinsights.com/; prefetch-src 'self' https://utteranc.es; connect-src 'self' https://utteranc.es;">
+
+
+
+
+<meta name="author" content="Moody">
+<meta name="description" content="It&rsquo;s been a long time since my promise to publish a detailed write-up on what the hell was actually going on inside qemu.
+Qt, for its Unix QProcess implementation, utilises forkfd library, (See also: https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd) as a helper library to fork subprocess.
+pidfd is a new kernel feature, which has just been added to the kernel upon v5.2.
+Since this merge, Qt added a new configuration feature (forkfd_pidfd, &ldquo;CLONE_PIDFD support in forkfd&rdquo;) and it was default to ON on Linux.">
+<meta name="keywords" content="blog,personal,中文,个人">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="QProcess in Qemu - A Detailed Explanation"/>
+<meta name="twitter:description" content="It&rsquo;s been a long time since my promise to publish a detailed write-up on what the hell was actually going on inside qemu.
+Qt, for its Unix QProcess implementation, utilises forkfd library, (See also: https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd) as a helper library to fork subprocess.
+pidfd is a new kernel feature, which has just been added to the kernel upon v5.2.
+Since this merge, Qt added a new configuration feature (forkfd_pidfd, &ldquo;CLONE_PIDFD support in forkfd&rdquo;) and it was default to ON on Linux."/>
+
+<meta property="og:title" content="QProcess in Qemu - A Detailed Explanation" />
+<meta property="og:description" content="It&rsquo;s been a long time since my promise to publish a detailed write-up on what the hell was actually going on inside qemu.
+Qt, for its Unix QProcess implementation, utilises forkfd library, (See also: https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd) as a helper library to fork subprocess.
+pidfd is a new kernel feature, which has just been added to the kernel upon v5.2.
+Since this merge, Qt added a new configuration feature (forkfd_pidfd, &ldquo;CLONE_PIDFD support in forkfd&rdquo;) and it was default to ON on Linux." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://mooody.me/posts/2022-04/qprocess-in-qemu/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-04-28T15:44:00+01:00" />
+<meta property="article:modified_time" content="2022-04-28T15:44:00+01:00" />
+
+
+
+
+  <title>Moody&#39;s</title>
+
+  
+  <link rel="canonical" href="https://mooody.me/posts/2022-04/qprocess-in-qemu/">
+  
+
+  <link rel="preload" href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as="font" type="font/woff2" crossorigin>
+
+
+  
+  
+  <link rel="stylesheet" href="/css/coder.min.6b1a4fbc48955b72aea7913e43fabeb45e8bc120da5aa41b598dd33adcac4b59.css" integrity="sha256-axpPvEiVW3Kup5E&#43;Q/q&#43;tF6LwSDaWqQbWY3TOtysS1k=" crossorigin="anonymous" media="screen" />
+
+
+
+
+
+  
+  
+    
+    
+    <link rel="stylesheet" href="/css/coder-dark.min.39e41a7f16bdf8cb16e43cae7d714fa1016f1d2d2898a5b3f27f42c9979204e2.css" integrity="sha256-OeQafxa9&#43;MsW5DyufXFPoQFvHS0omKWz8n9CyZeSBOI=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+   
+
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/cards.min.66689eb6794f4d37bf49748d47a91d8dc5918d78d800a8fae4f1a9649ce35145.css" integrity="sha256-ZmietnlPTTe/SXSNR6kdjcWRjXjYAKj65PGpZJzjUUU=" crossorigin="anonymous" media="screen" />
+  
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/spoiler.min.6758d9b6919e25bb0a3c105fb53c53d4329838c7c3c6c41a4443a232bcca0886.css" integrity="sha256-Z1jZtpGeJbsKPBBftTxT1DKYOMfDxsQaREOiMrzKCIY=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+  <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" href="/images/favicon.ico" sizes="16x16">
+
+<link rel="apple-touch-icon" href="/images/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#5bbad5">
+
+
+  
+
+  <meta name="generator" content="Hugo 0.101.0" />
+
+
+  
+
+</head>
+
+
+
+
+
+
+
+<body class="preload-transitions colorscheme-auto">
+  
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+  <main class="wrapper">
+    <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      Moody&#39;s
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/">主页</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">文章</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/friends/">友链</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">我</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://g.mooody.me/d/home/server-status?orgId=2">服务状态</a>
+            </li>
+          
+        
+        
+          
+          
+          
+            
+          
+            
+              
+                <li class="navigation-item menu-separator">
+                  <span>|</span>
+                </li>
+                
+              
+              <li class="navigation-item">
+                <a href="https://mooody.me/en/">🇬🇧</a>
+              </li>
+            
+          
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+    <div class="content">
+      
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://mooody.me/posts/2022-04/qprocess-in-qemu/">
+              QProcess in Qemu - A Detailed Explanation
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime="2022-04-28T15:44:00&#43;01:00">
+                April 28, 2022
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <span class="tag">
+      <a href="/tags/qt-6/">Qt 6</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/qmake/">qmake</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/linux/">Linux</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/archrv/">ArchRV</a>
+    </span></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <p>It&rsquo;s been a long time since my promise to publish a detailed write-up on what the hell was
+actually going on inside qemu.</p>
+<p>Qt, for its Unix QProcess implementation, utilises <a href="https://doc.qt.io/qt-6/qtcore-attribution-forkfd.html">forkfd library</a>, (See also: <a href="https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd">https://github.com/qt/qtbase/tree/dev/src/3rdparty/forkfd</a>) as a helper library to fork subprocess.</p>
+<p><code>pidfd</code> is a new kernel feature, which has just been added to the kernel upon v5.2.</p>
+<p>Since <a href="https://codereview.qt-project.org/c/qt/qtbase/+/313894">this merge</a>, Qt added a new
+configuration feature (<code>forkfd_pidfd</code>, &ldquo;CLONE_PIDFD support in forkfd&rdquo;) and it was default
+to ON on Linux.</p>
+<p>When this feature is ON, Qt does nothing special, forkfd library selectively uses either
+<code>forkfd()</code> or <code>fork()</code> based on kernel version: (it goes into
+<a href="https://github.com/qt/qtbase/blob/dev/src/3rdparty/forkfd/forkfd.c#L654-L656">this branch</a>
+and then
+<a href="https://github.com/qt/qtbase/blob/dev/src/3rdparty/forkfd/forkfd_linux.c#L150">sets CLONE_PIDFD here</a>
+before calling
+<a href="https://github.com/qt/qtbase/blob/dev/src/3rdparty/forkfd/forkfd_linux.c#L68">clone</a>)</p>
+<p>OTOH, if the feature is OFF, Qt sets the <code>FFD_USE_FORK</code> flag (say: forkfd please use <code>fork</code>
+anyway) when calling <code>::forkfd()</code>, which will cause forkfd to use <code>fork()</code> direcly.</p>
+<p>Under regular circumstances, this works well, forkfd is smart enough to correctly detect the
+kernel version and use the correct syscall, however, things go south fast when <code>qemu-user</code>
+steps in:</p>
+<ol>
+<li>Qt has no <code>FFD_USE_FORK</code> set, and</li>
+<li>forkfd thinks the kernel has correct <code>forkfd</code> syscall implementation (because it should have), and</li>
+<li><strong>QEMU has no support for <code>clone</code>-ing with <code>CLONE_PIDFD</code> yet (there&rsquo;s a <a href="https://patchew.org/QEMU/mvm4kadwyrm.fsf@suse.de/">possibly abandoned patch</a>)</strong></li>
+</ol>
+<p>(original blog post: <a href="https://mooody.me/posts/2022-04/archrv-qmake6/">记一次-debug-qmake</a>)</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        <div class="comments">
+    <script>
+  
+    let getTheme = window.localStorage && window.localStorage.getItem("colorscheme");
+  
+    getTheme = getTheme == null ? '' : getTheme;
+    
+    let theme = getTheme === 'dark' ? 'github-dark' : 'github-light';
+    let s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo', 'moodyhunter\/moodyhunter.github.io');
+    s.setAttribute('issue-term', 'pathname');
+    s.setAttribute('theme', theme);
+    s.setAttribute('crossorigin', 'anonymous');
+    s.setAttribute('async', '');
+    document.querySelector('div.comments').innerHTML = '';
+    document.querySelector('div.comments').appendChild(s);
+  
+    </script>
+    </div>
+      </footer>
+    </article>
+
+    
+  </section>
+
+    </div>
+
+    <footer class="footer">
+  <section class="container">
+    ©
+    
+      2021 -
+    
+    2022
+     Moody 
+    ·
+    
+       <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA-4.0</a>
+    ·
+    
+     <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+  </section>
+</footer>
+
+  </main>
+
+  
+  
+  <script src="/js/coder.min.236049395dc3682fb2719640872958e12f1f24067bb09c327b233e6290c7edac.js" integrity="sha256-I2BJOV3DaC&#43;ycZZAhylY4S8fJAZ7sJwyeyM&#43;YpDH7aw="></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</body>
+
+</html>

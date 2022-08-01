@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Moody&#39;s</title>
+    <link>https://mooody.me/tags/</link>
+    <description>Recent content in Tags on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Mon, 04 Jul 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://mooody.me/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Linux</title>
+      <link>https://mooody.me/tags/linux/</link>
+      <pubDate>Mon, 04 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/tags/linux/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Wayland</title>
+      <link>https://mooody.me/tags/wayland/</link>
+      <pubDate>Mon, 04 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/tags/wayland/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>坑</title>
+      <link>https://mooody.me/tags/%E5%9D%91/</link>
+      <pubDate>Mon, 04 Jul 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/tags/%E5%9D%91/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Crashes</title>
+      <link>https://mooody.me/tags/crashes/</link>
+      <pubDate>Sat, 18 Jun 2022 13:10:07 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/crashes/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>JasPer</title>
+      <link>https://mooody.me/tags/jasper/</link>
+      <pubDate>Sat, 18 Jun 2022 13:10:07 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/jasper/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Qt</title>
+      <link>https://mooody.me/tags/qt/</link>
+      <pubDate>Sat, 18 Jun 2022 13:10:07 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/qt/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>android</title>
+      <link>https://mooody.me/tags/android/</link>
+      <pubDate>Fri, 13 May 2022 02:09:05 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/android/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>cmake</title>
+      <link>https://mooody.me/tags/cmake/</link>
+      <pubDate>Fri, 13 May 2022 02:09:05 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/cmake/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Qt 6</title>
+      <link>https://mooody.me/tags/qt-6/</link>
+      <pubDate>Fri, 13 May 2022 02:09:05 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/qt-6/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ArchRV</title>
+      <link>https://mooody.me/tags/archrv/</link>
+      <pubDate>Thu, 28 Apr 2022 15:44:00 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/archrv/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>qmake</title>
+      <link>https://mooody.me/tags/qmake/</link>
+      <pubDate>Thu, 28 Apr 2022 15:44:00 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/qmake/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>meta</title>
+      <link>https://mooody.me/tags/meta/</link>
+      <pubDate>Thu, 14 Apr 2022 00:07:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/tags/meta/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>wasm</title>
+      <link>https://mooody.me/tags/wasm/</link>
+      <pubDate>Sun, 30 May 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://mooody.me/tags/wasm/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

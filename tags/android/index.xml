@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>android on Moody&#39;s</title>
+    <link>https://mooody.me/tags/android/</link>
+    <description>Recent content in android on Moody&#39;s</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>cn</language>
+    <lastBuildDate>Fri, 13 May 2022 02:09:05 +0100</lastBuildDate><atom:link href="https://mooody.me/tags/android/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Android &#39;Deploy&#39; Qt?</title>
+      <link>https://mooody.me/posts/2022-05/android-deploy-qt/</link>
+      <pubDate>Fri, 13 May 2022 02:09:05 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-05/android-deploy-qt/</guid>
+      <description>你这 androiddeployqt 可能没法正常 deploy Qt 一些无聊的概念 Moody&amp;rsquo;s Utility Bot 是一个与此仓库 GitHub Actions 梦幻联动 的 Telegram Bot
+负责发送消息和最新 build 产物， 同时也负责提醒蔡队起来（出处：&amp;ldquo;我起来了&amp;rdquo;） Qt 是 ……
+这还用介绍吗 QtGraphicalEffects 是 ……
+Qt5 时期的一个 Qt module，顾名思义负责 “图形特效” 比如渐变，阴影甚至 GLSL 效果 但在 Qt6 中被 deprecate 了 但我硬是强行将其 port 到 Qt6，其实是一种 “又不是不能用” 的状态 《开端》？ 2022 年 5 月 1 日凌晨 1 点 00 分 56 秒：
+Moody&amp;rsquo;s Utils Bot:
+Successfully built the client app, [File : MoodyAppMain.</description>
+    </item>
+    
+    <item>
+      <title>Qt 6.3 中 QML 的坑</title>
+      <link>https://mooody.me/posts/2022-04/qt63-qmlimportscanner/</link>
+      <pubDate>Sat, 02 Apr 2022 13:43:37 +0100</pubDate>
+      
+      <guid>https://mooody.me/posts/2022-04/qt63-qmlimportscanner/</guid>
+      <description>估计是 Regression 了 qmlimportscanner 我也不知道为什么，由 androiddeployqt 调用的 qmlimportscanner 找不到就在本目录下的 QtGraphicalEffects QML Module。
+Android 平台黑屏卡死 其次，当使用 Qt 6.3 编译出的 Android APK 时，我的 MoodyAPI Client 一旦退出就无法再进入界面（Sigh
+解决方法 回退到 Qt6.2
+Press F to pay respects.</description>
+    </item>
+    
+  </channel>
+</rss>

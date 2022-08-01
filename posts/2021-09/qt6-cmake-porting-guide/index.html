@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+
+
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; block-all-mixed-content; default-src 'self'; child-src 'self'; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/; form-action 'self' https://utteranc.es; frame-src 'self' https://utteranc.es; img-src 'self' https:; object-src 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com/ https://cdn.jsdelivr.net/ https://utteranc.es; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net/ https://utteranc.es/ https://static.cloudflareinsights.com/; prefetch-src 'self' https://utteranc.es; connect-src 'self' https://utteranc.es;">
+
+
+
+
+<meta name="author" content="Moody">
+<meta name="description" content="随着 Qt6.2 进入 rc 阶段 (Update: 24 Feb 2022: 其实现在 6.3 都出 Beta 了)，标志着 Qt6 各模块已经趋近完整，可以看到身边越来越多的项目开始了从 Qt5 迁移到 Qt6 繁重工作， 作为从 Qt6 alpha 还没发就尝试迁移的资深人员。鄙人自认为在 Qt6 / CMake 方面算是比较了解。
+直入主题 不同于 6.0，Qt 6.2 包含了更多的 CMake API，本文就要说说个人认为最晦涩难懂的 qt_add_qml_module：
+qt_add_qml_module 非常复杂，单参数就有 26 个，首先来看一下这个巨大函数的 signature
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 qt_add_qml_module( # 必需参数 target URI uri VERSION version # 可选参数 [PAST_MAJOR_VERSIONS ...] [STATIC | SHARED] [PLUGIN_TARGET plugin_target] [OUTPUT_DIRECTORY output_dir] [RESOURCE_PREFIX resource_prefix] [CLASS_NAME class_name] [TYPEINFO typeinfo] [IMPORTS .">
+<meta name="keywords" content="blog,personal,中文,个人">
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Qt 6 Porting Guide - CMake"/>
+<meta name="twitter:description" content="随着 Qt6.2 进入 rc 阶段 (Update: 24 Feb 2022: 其实现在 6.3 都出 Beta 了)，标志着 Qt6 各模块已经趋近完整，可以看到身边越来越多的项目开始了从 Qt5 迁移到 Qt6 繁重工作， 作为从 Qt6 alpha 还没发就尝试迁移的资深人员。鄙人自认为在 Qt6 / CMake 方面算是比较了解。
+直入主题 不同于 6.0，Qt 6.2 包含了更多的 CMake API，本文就要说说个人认为最晦涩难懂的 qt_add_qml_module：
+qt_add_qml_module 非常复杂，单参数就有 26 个，首先来看一下这个巨大函数的 signature
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 qt_add_qml_module( # 必需参数 target URI uri VERSION version # 可选参数 [PAST_MAJOR_VERSIONS ...] [STATIC | SHARED] [PLUGIN_TARGET plugin_target] [OUTPUT_DIRECTORY output_dir] [RESOURCE_PREFIX resource_prefix] [CLASS_NAME class_name] [TYPEINFO typeinfo] [IMPORTS ."/>
+
+<meta property="og:title" content="Qt 6 Porting Guide - CMake" />
+<meta property="og:description" content="随着 Qt6.2 进入 rc 阶段 (Update: 24 Feb 2022: 其实现在 6.3 都出 Beta 了)，标志着 Qt6 各模块已经趋近完整，可以看到身边越来越多的项目开始了从 Qt5 迁移到 Qt6 繁重工作， 作为从 Qt6 alpha 还没发就尝试迁移的资深人员。鄙人自认为在 Qt6 / CMake 方面算是比较了解。
+直入主题 不同于 6.0，Qt 6.2 包含了更多的 CMake API，本文就要说说个人认为最晦涩难懂的 qt_add_qml_module：
+qt_add_qml_module 非常复杂，单参数就有 26 个，首先来看一下这个巨大函数的 signature
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 qt_add_qml_module( # 必需参数 target URI uri VERSION version # 可选参数 [PAST_MAJOR_VERSIONS ...] [STATIC | SHARED] [PLUGIN_TARGET plugin_target] [OUTPUT_DIRECTORY output_dir] [RESOURCE_PREFIX resource_prefix] [CLASS_NAME class_name] [TYPEINFO typeinfo] [IMPORTS ." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://mooody.me/posts/2021-09/qt6-cmake-porting-guide/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-09-20T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-09-20T00:00:00+00:00" />
+
+
+
+
+  <title>Moody&#39;s</title>
+
+  
+  <link rel="canonical" href="https://mooody.me/posts/2021-09/qt6-cmake-porting-guide/">
+  
+
+  <link rel="preload" href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as="font" type="font/woff2" crossorigin>
+
+
+  
+  
+  <link rel="stylesheet" href="/css/coder.min.6b1a4fbc48955b72aea7913e43fabeb45e8bc120da5aa41b598dd33adcac4b59.css" integrity="sha256-axpPvEiVW3Kup5E&#43;Q/q&#43;tF6LwSDaWqQbWY3TOtysS1k=" crossorigin="anonymous" media="screen" />
+
+
+
+
+
+  
+  
+    
+    
+    <link rel="stylesheet" href="/css/coder-dark.min.39e41a7f16bdf8cb16e43cae7d714fa1016f1d2d2898a5b3f27f42c9979204e2.css" integrity="sha256-OeQafxa9&#43;MsW5DyufXFPoQFvHS0omKWz8n9CyZeSBOI=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+   
+
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/cards.min.66689eb6794f4d37bf49748d47a91d8dc5918d78d800a8fae4f1a9649ce35145.css" integrity="sha256-ZmietnlPTTe/SXSNR6kdjcWRjXjYAKj65PGpZJzjUUU=" crossorigin="anonymous" media="screen" />
+  
+
+  
+  
+    
+    <link rel="stylesheet" href="/scss/spoiler.min.6758d9b6919e25bb0a3c105fb53c53d4329838c7c3c6c41a4443a232bcca0886.css" integrity="sha256-Z1jZtpGeJbsKPBBftTxT1DKYOMfDxsQaREOiMrzKCIY=" crossorigin="anonymous" media="screen" />
+  
+
+
+
+  <link rel="icon" type="image/png" href="/images/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/png" href="/images/favicon.ico" sizes="16x16">
+
+<link rel="apple-touch-icon" href="/images/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/images/favicon.ico">
+
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/images/safari-pinned-tab.svg" color="#5bbad5">
+
+
+  
+
+  <meta name="generator" content="Hugo 0.101.0" />
+
+
+  
+
+</head>
+
+
+
+
+
+
+
+<body class="preload-transitions colorscheme-auto">
+  
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+  <main class="wrapper">
+    <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      Moody&#39;s
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/">主页</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">文章</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/friends/">友链</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">我</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="https://g.mooody.me/d/home/server-status?orgId=2">服务状态</a>
+            </li>
+          
+        
+        
+          
+          
+          
+            
+          
+            
+              
+                <li class="navigation-item menu-separator">
+                  <span>|</span>
+                </li>
+                
+              
+              <li class="navigation-item">
+                <a href="https://mooody.me/en/">🇬🇧</a>
+              </li>
+            
+          
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+    <div class="content">
+      
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">
+            <a class="title-link" href="https://mooody.me/posts/2021-09/qt6-cmake-porting-guide/">
+              Qt 6 Porting Guide - CMake
+            </a>
+          </h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime="2021-09-20T00:00:00Z">
+                September 20, 2021
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <span class="tag">
+      <a href="/tags/qt-6/">Qt 6</a>
+    </span>
+      <span class="separator">•</span>
+    <span class="tag">
+      <a href="/tags/cmake/">cmake</a>
+    </span></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <p><del>随着 Qt6.2 进入 rc 阶段</del> (Update: 24 Feb 2022: 其实现在 6.3 都出 Beta 了)，标志着 Qt6 各模块已经趋近完整，可以看到身边越来越多的项目开始了从 Qt5 迁移到 Qt6 <del>繁重工作</del>，
+作为从 Qt6 alpha 还没发就尝试迁移的<del>资深人员</del>。鄙人自认为在 Qt6 / CMake 方面算是比较了解。</p>
+<h2 id="直入主题">
+  直入主题
+  <a class="heading-link" href="#%e7%9b%b4%e5%85%a5%e4%b8%bb%e9%a2%98">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h2>
+<p>不同于 6.0，Qt 6.2 包含了更多的 CMake API，本文就要说说个人认为最晦涩难懂的 <a href="https://doc-snapshots.qt.io/qt6-dev/qt-add-qml-module.html#qt6-add-qml-module"><code>qt_add_qml_module</code></a>：</p>
+<p><code>qt_add_qml_module</code> 非常复杂，单参数就有 26 个，首先来看一下这个巨大函数的 signature</p>
+<div class="highlight"><div style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">
+<table style="border-spacing:0;padding:0;margin:0;border:0;"><tr><td style="vertical-align:top;padding:0;margin:0;border:0;">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 1
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 2
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 3
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 4
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 5
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 6
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 7
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 8
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f"> 9
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">10
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">11
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">12
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">13
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">14
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">15
+</span><span style="white-space:pre;user-select:none;margin-right:0.4em;padding:0 0.4em 0 0.4em;color:#7f7f7f">16
+</span></code></pre></td>
+<td style="vertical-align:top;padding:0;margin:0;border:0;;width:100%">
+<pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cmake" data-lang="cmake"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">qt_add_qml_module</span>(
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4"># 必需参数
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#f1fa8c">target</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f1fa8c">URI</span> <span style="color:#f1fa8c">uri</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f1fa8c">VERSION</span> <span style="color:#f1fa8c">version</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4"># 可选参数
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#f1fa8c">[PAST_MAJOR_VERSIONS</span> <span style="color:#f1fa8c">...]</span> <span style="color:#f1fa8c">[STATIC</span> <span style="color:#f1fa8c">|</span> <span style="color:#f1fa8c">SHARED]</span> <span style="color:#f1fa8c">[PLUGIN_TARGET</span> <span style="color:#f1fa8c">plugin_target]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f1fa8c">[OUTPUT_DIRECTORY</span> <span style="color:#f1fa8c">output_dir]</span> <span style="color:#f1fa8c">[RESOURCE_PREFIX</span> <span style="color:#f1fa8c">resource_prefix]</span> <span style="color:#f1fa8c">[CLASS_NAME</span> <span style="color:#f1fa8c">class_name]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f1fa8c">[TYPEINFO</span> <span style="color:#f1fa8c">typeinfo]</span> <span style="color:#f1fa8c">[IMPORTS</span> <span style="color:#f1fa8c">...]</span> <span style="color:#f1fa8c">[OPTIONAL_IMPORTS</span> <span style="color:#f1fa8c">...]</span> <span style="color:#f1fa8c">[DEPENDENCIES</span> <span style="color:#f1fa8c">...]</span> <span style="color:#f1fa8c">[IMPORT_PATH</span> <span style="color:#f1fa8c">...]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f1fa8c">[SOURCES</span> <span style="color:#f1fa8c">...]</span> <span style="color:#f1fa8c">[QML_FILES</span> <span style="color:#f1fa8c">...]</span> <span style="color:#f1fa8c">[OUTPUT_TARGETS</span> <span style="color:#f1fa8c">out_targets_var]</span> <span style="color:#f1fa8c">[DESIGNER_SUPPORTED]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4"># No 系列可选参数
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#f1fa8c">[NO_PLUGIN_OPTIONAL]</span> <span style="color:#f1fa8c">[NO_CREATE_PLUGIN_TARGET]</span> <span style="color:#f1fa8c">[NO_GENERATE_PLUGIN_SOURCE]</span> <span style="color:#f1fa8c">[NO_GENERATE_QMLTYPES]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f1fa8c">[NO_GENERATE_QMLDIR]</span> <span style="color:#f1fa8c">[NO_LINT]</span> <span style="color:#f1fa8c">[NO_CACHEGEN]</span> <span style="color:#f1fa8c">[NO_RESOURCE_TARGET_PATH]</span>
+</span></span><span style="display:flex;"><span>)
+</span></span></code></pre></td></tr></table>
+</div>
+</div><hr>
+<h3 id="必需参数">
+  必需参数
+  <a class="heading-link" href="#%e5%bf%85%e9%9c%80%e5%8f%82%e6%95%b0">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>在这 26 个奇奇怪怪的参数中，有 3 个必需参数（<code>target</code>，<code>uri</code>，<code>version</code>）</p>
+<h4 id="target">
+  Target
+  <a class="heading-link" href="#target">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h4>
+<p>对于这个 Target 参数，要提供的是一个符合 CMake 命名规范的 target name，这个 target 既可以是一个已经存在的 library（别跟我说 INTERFACE library），也可以是一个现存 executable target，甚至也可以不存在（如果不存在的话，此函数会以此名称创建一个 library）</p>
+<p>有关这个 Target 的作用与他和我们 QML module 的关系，将在下文慢慢讲解</p>
+<h4 id="uri">
+  URI
+  <a class="heading-link" href="#uri">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h4>
+<p>一个很通俗易懂的参数（吧？），就是这个 QML 模块的 uri （可以为 <code>qml.myapp.me</code> 这样的域名形式，也可以是 <code>MyApp</code> 一类）</p>
+<p>所以你可以用这个 URI 来导入此 QML module 到任何其他程序（还记得 <code>import QtQuick.Controls</code> 吧，你现在可以 <code>import qml.myapp.me</code> 了）</p>
+<h4 id="version">
+  VERSION
+  <a class="heading-link" href="#version">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h4>
+<p>大概用不着多说，此 QML module 的版本号，遵循 <code>MAJOR.MINOR</code> 格式（但其实你可以偷偷写 <code>MAJOR.MINOR.PATCH</code>，只不过是没用罢了）</p>
+<hr>
+<h3 id="可选参数">
+  可选参数
+  <a class="heading-link" href="#%e5%8f%af%e9%80%89%e5%8f%82%e6%95%b0">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h3>
+<p>再来说说不带 <code>NO_</code> 开头的那些可选参数：</p>
+<h4 id="past_major_versions">
+  PAST_MAJOR_VERSIONS
+  <a class="heading-link" href="#past_major_versions">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h4>
+<p>在 Qt5 时代，一个 QML module 里是可以包含很多小版本（大版本）的，这也就是 <code>import Something 1.15</code> 中最后版本号的由来，而这在 Qt6 中变了，一个不带版本号的 <code>import</code> 语句默认导入的是最新版本的 module。</p>
+<blockquote>
+<p>如果我的 module 里有多个版本呢？</p>
+</blockquote>
+<p>那就通过 <code>PAST_MAJOR_VERSIONS 1 2 3 4 5</code> 来告诉函数你的 module 包含五个之前的版本，另外，你需要给对应版本的 <code>qml</code> 文件添加 <code>properties</code> （<code>QT_QML_SOURCE_VERSIONS</code>）来标记此文件输入哪个版本的 module</p>
+<p><em>我觉得用到这个参数的人不多吧</em></p>
+<h4 id="static--shared">
+  [STATIC | SHARED]
+  <a class="heading-link" href="#static--shared">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h4>
+<p>这个选项指定了此 QML module 将会是一个静态库还是一个动态库，与 CMake 中 <code>add_library</code> 时使用的 <code>STATIC</code> 或 <code>SHARED</code> 是同一效果</p>
+<blockquote>
+<p>要注意的是，这一参数只适用于给定 Target 不存在（即当此函数负责创建 target）的时候，如果必需参数 Target 已经存在，则不能指定这个参数</p>
+</blockquote>
+<h4 id="plugin_target">
+  PLUGIN_TARGET
+  <a class="heading-link" href="#plugin_target">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h4>
+<p><em>建议放松心情慢慢看</em></p>
+<p>在 Qt QML 系统中，一个 <em>&ldquo;模块&rdquo;</em> 是以 <code>QQml*Plugin</code> （<code>QQmlExtensionPlugin</code>，<code>QQmlEngineExtensionPlugin</code>） 插件形式存在的</p>
+<p>此参数中要填写的就是这个 Plugin 的 CMake target 名称，这时会出现以下几种情况：</p>
+<ol>
+<li>必需参数 <code>Target</code> 为非 executable 或不存在，且 <code>PLUGIN_TARGET</code> 与 <code>Target</code> 相同</li>
+<li>必需参数 <code>Target</code> 为非 executable 或不存在，且 <code>PLUGIN_TARGET</code> 与 <code>Target</code> 不相同或未指定</li>
+<li>必需参数 <code>Target</code> 为 executable</li>
+</ol>
+<h5 id="情况-1-必需参数-target-为非-executable-或不存在且-plugin_target-与-target-相同">
+  情况 1: 必需参数 <code>Target</code> 为非 executable 或不存在，且 <code>PLUGIN_TARGET</code> 与 <code>Target</code> 相同
+  <a class="heading-link" href="#%e6%83%85%e5%86%b5-1-%e5%bf%85%e9%9c%80%e5%8f%82%e6%95%b0-target-%e4%b8%ba%e9%9d%9e-executable-%e6%88%96%e4%b8%8d%e5%ad%98%e5%9c%a8%e4%b8%94-plugin_target-%e4%b8%8e-target-%e7%9b%b8%e5%90%8c">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h5>
+<p>在这种情况下，如果 <code>Target</code> 不存在，则会创建一个 library target，其动态或静态跟随上一个参数</p>
+<h5 id="情况-2-必需参数-target-为非-executable-或不存在且-plugin_target-与-target-不相同或未指定">
+  情况 2: 必需参数 <code>Target</code> 为非 executable 或不存在，且 <code>PLUGIN_TARGET</code> 与 <code>Target</code> 不相同或未指定
+  <a class="heading-link" href="#%e6%83%85%e5%86%b5-2-%e5%bf%85%e9%9c%80%e5%8f%82%e6%95%b0-target-%e4%b8%ba%e9%9d%9e-executable-%e6%88%96%e4%b8%8d%e5%ad%98%e5%9c%a8%e4%b8%94-plugin_target-%e4%b8%8e-target-%e4%b8%8d%e7%9b%b8%e5%90%8c%e6%88%96%e6%9c%aa%e6%8c%87%e5%ae%9a">
+    <i class="fa fa-link" aria-hidden="true"></i>
+  </a>
+</h5>
+<p>在这种情况下，本函数将会创建一个名称为 <code>${PLUGIN_TARGET}</code> 的 library，如果 <code>PLUGIN_TARGET</code> 未指定，则会重置为默认值 <code>${Target}plugin</code>，动态或静态跟随上一个参数，并生成一个 class 作为此 library 的实现，这部分代码实现了一个 <code>QQmlEngineExtensionPlugin</code> （文件名为 <code>${Target}plugin_${URI}Plugin.cpp</code>），此类将自动在运行时进行 QML 类型注册（具体注册流程可能要等下一篇文章了）。</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        <div class="comments">
+    <script>
+  
+    let getTheme = window.localStorage && window.localStorage.getItem("colorscheme");
+  
+    getTheme = getTheme == null ? '' : getTheme;
+    
+    let theme = getTheme === 'dark' ? 'github-dark' : 'github-light';
+    let s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo', 'moodyhunter\/moodyhunter.github.io');
+    s.setAttribute('issue-term', 'pathname');
+    s.setAttribute('theme', theme);
+    s.setAttribute('crossorigin', 'anonymous');
+    s.setAttribute('async', '');
+    document.querySelector('div.comments').innerHTML = '';
+    document.querySelector('div.comments').appendChild(s);
+  
+    </script>
+    </div>
+      </footer>
+    </article>
+
+    
+  </section>
+
+    </div>
+
+    <footer class="footer">
+  <section class="container">
+    ©
+    
+      2021 -
+    
+    2022
+     Moody 
+    ·
+    
+       <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA-4.0</a>
+    ·
+    
+     <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+    
+  </section>
+</footer>
+
+  </main>
+
+  
+  
+  <script src="/js/coder.min.236049395dc3682fb2719640872958e12f1f24067bb09c327b233e6290c7edac.js" integrity="sha256-I2BJOV3DaC&#43;ycZZAhylY4S8fJAZ7sJwyeyM&#43;YpDH7aw="></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</body>
+
+</html>
